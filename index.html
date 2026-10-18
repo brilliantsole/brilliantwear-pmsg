@@ -1,0 +1,90 @@
+<html>
+  <head>
+    <title>BrilliantWear x PMSG</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.3/gh-fork-ribbon.min.css"
+    />
+    <script src="./src/exif-reader/exif-reader.js"></script>
+    <script src="./src/script.js" type="module"></script>
+  </head>
+  <style>
+    .github-fork-ribbon:before {
+      background-color: #333;
+    }
+  </style>
+  <body>
+    <a
+      class="github-fork-ribbon"
+      href="https://github.com/brilliantsole/brilliantwear-pmsg"
+      data-ribbon="View on GitHub"
+      title="View on GitHub"
+      target="_blank"
+      >View on GitHub</a
+    >
+
+    <h1>BrilliantWear x PMSG</h1>
+
+    <button id="addDevice">add device</button>
+
+    <h2>Device Information</h2>
+    <ul>
+      <li>name: <span id="name"></span></li>
+      <li>
+        has camera? <span id="hasCamera"></span>
+        <span id="isCameraDisabled"></span>
+      </li>
+      <li>
+        has microphone? <span id="hasMicrophone"></span>
+        <span id="isMicrophoneDisabled"></span>
+      </li>
+    </ul>
+
+    <h2>Camera</h2>
+    <button id="takePicture" disabled style="min-width: 7.5em">
+      take picture
+    </button>
+    <progress value="0" id="cameraImageProgress"></progress>
+    <br />
+    <label>auto picture: <input type="checkbox" id="autoPicture" /> </label>
+    <br />
+    <label>
+      resolution
+      <select id="setCameraResolution">
+        <optgroup label="select resolution"></optgroup>
+      </select>
+    </label>
+    <br />
+    <label>
+      quality
+      <span id="cameraQuality" style="display: inline-block; min-width: 2.5em"
+        >61%</span
+      >
+      <input
+        id="setCameraQuality"
+        type="range"
+        step="1"
+        value="61"
+        min="0"
+        max="100"
+      />
+    </label>
+    <br />
+    <img
+      id="cameraImage"
+      style="height: 200px; aspect-ratio: 4/3; outline: solid black 1px"
+    />
+    <br />
+    <label>
+      image metadata:
+      <pre id="cameraImageMetadata"></pre>
+    </label>
+
+    <h2>Microphone</h2>
+  </body>
+  <script type="module">
+    //
+  </script>
+</html>

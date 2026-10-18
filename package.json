@@ -1,0 +1,14 @@
+{
+  "name": "brilliantwear-pmsg",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brilliantsole/brilliantwear-pmsg.git"
+  },
+  "author": "zack@brilliantwear.com",
+  "license": "MIT",
+  "homepage": "https://github.com/brilliantsole/brilliantwear-pmsg#readme",
+  "devDependencies": {}
+}
