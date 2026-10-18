@@ -227,6 +227,9 @@ onCameraDeviceConnected((device) => {
 
     const cameraImageMetadata = {};
     ["protocol", "capture_state", "dnr_present"].forEach((key) => {
+      if (!tags[key]) {
+        return;
+      }
       cameraImageMetadata[key] = tags[key].value;
     });
 
@@ -300,3 +303,133 @@ onCameraDeviceConnected((device) => {
 });
 
 // MICROPHONE
+
+/** @type {HTMLButtonElement} */
+const toggleMicrophoneButton = document.getElementById("toggleMicrophone");
+toggleMicrophoneButton.addEventListener("click", () => {
+  const device = getDevice();
+  device?.toggleMicrophone();
+});
+const updateToggleMicrophoneButton = () => {
+  const device = getDevice();
+
+  let disabled = true;
+  let innerText = "start microphone";
+  if (device) {
+    switch (device.microphoneStatus) {
+      case "idle":
+        disabled = false;
+        break;
+      case "streaming":
+        disabled = false;
+        innerText = "stop microphone";
+        break;
+    }
+  }
+  toggleMicrophoneButton.disabled = disabled;
+  toggleMicrophoneButton.innerText = innerText;
+};
+onCameraDeviceIsConnected((device, isConnected) => {
+  updateToggleMicrophoneButton();
+  if (isConnected) {
+    device.addEventListener(
+      "microphoneStatus",
+      () => {
+        updateToggleMicrophoneButton();
+      },
+      { signal: device.connectionAbortSignal },
+    );
+  }
+});
+
+/** @type {HTMLSelectElement} */
+const setMicrophoneSampleRateSelect = document.getElementById(
+  "setMicrophoneSampleRate",
+);
+const setMicrophoneSampleRateOptgroup =
+  setMicrophoneSampleRateSelect.querySelector("optgroup");
+BW.MicrophoneSampleRates.forEach((sampleRate) => {
+  setMicrophoneSampleRateOptgroup.appendChild(
+    new Option(`${+sampleRate / 1000} kHz`, sampleRate),
+  );
+});
+setMicrophoneSampleRateSelect.addEventListener("input", () => {
+  const device = getDevice();
+  const sampleRate = setMicrophoneSampleRateSelect.value;
+  device?.setMicrophoneConfiguration({
+    sampleRate,
+  });
+});
+onCameraDeviceConnected((device) => {
+  device.setMicrophoneConfiguration({
+    sampleRate: setMicrophoneSampleRateSelect.value,
+  });
+  device.addEventListener(
+    "microphoneStatus",
+    (event) => {
+      setMicrophoneSampleRateSelect.disabled =
+        device.microphoneStatus != "idle";
+    },
+    { signal: device.connectionAbortSignal, immediate: true },
+  );
+});
+setMicrophoneSampleRateSelect.value = BW.MicrophoneSampleRates[1];
+
+/** @type {HTMLSelectElement} */
+const setMicrophoneBitDepthSelect = document.getElementById(
+  "setMicrophoneBitDepth",
+);
+const setMicrophoneBitDepthOptgroup =
+  setMicrophoneBitDepthSelect.querySelector("optgroup");
+BW.MicrophoneBitDepths.forEach((bitDepth) => {
+  setMicrophoneBitDepthOptgroup.appendChild(
+    new Option(`${bitDepth}-bit`, bitDepth),
+  );
+});
+setMicrophoneBitDepthSelect.addEventListener("input", () => {
+  const device = getDevice();
+  const bitDepth = setMicrophoneBitDepthSelect.value;
+  device?.setMicrophoneConfiguration({
+    bitDepth,
+  });
+});
+onCameraDeviceConnected((device) => {
+  device.setMicrophoneConfiguration({
+    bitDepth: setMicrophoneBitDepthSelect.value,
+  });
+  device.addEventListener(
+    "microphoneStatus",
+    (event) => {
+      setMicrophoneBitDepthSelect.disabled = device.microphoneStatus != "idle";
+    },
+    { signal: device.connectionAbortSignal, immediate: true },
+  );
+});
+setMicrophoneBitDepthSelect.value = BW.MicrophoneBitDepths[1];
+
+const audioContext = new (window.AudioContext || window.webkitAudioContext)({
+  sampleRate: 16_000,
+  latencyHint: "interactive",
+});
+const checkAudioContextState = () => {
+  const { state } = audioContext;
+  //   console.log({ audioContextState: state });
+  if (state != "running") {
+    document.addEventListener("click", () => audioContext.resume(), {
+      once: true,
+    });
+  }
+};
+audioContext.addEventListener("statechange", () => {
+  checkAudioContextState();
+});
+checkAudioContextState();
+
+/** @type {HTMLAudioElement} */
+const microphoneStreamAudioElement =
+  document.getElementById("microphoneStream");
+onCameraDeviceConnected((device) => {
+  device.audioContext = audioContext;
+  microphoneStreamAudioElement.srcObject =
+    device.microphoneMediaStreamDestination.stream;
+});

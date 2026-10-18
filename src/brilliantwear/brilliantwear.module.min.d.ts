@@ -1195,6 +1195,7 @@ type CameraConfigurationRanges = {
 interface CameraImage {
     blob: Blob;
     url: string;
+    _url?: string;
     arrayBuffer: ArrayBuffer;
     timestamp: number;
     latency: number;
@@ -1225,6 +1226,7 @@ interface CameraEventMessages {
         configuration: CameraConfiguration;
         blob: Blob;
         url: string;
+        _url?: string;
     };
     autoPicture: {
         autoPicture: boolean;
@@ -2048,6 +2050,7 @@ interface MicrophoneEventMessages {
         configuration: MicrophoneConfiguration;
         blob: Blob;
         url: string;
+        _url?: string;
     };
     startRecordingMicrophone: {};
     stopRecordingMicrophone: {};

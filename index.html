@@ -83,8 +83,24 @@
     </label>
 
     <h2>Microphone</h2>
+
+    <button disabled id="toggleMicrophone">start microphone</button>
+    <br />
+    <label>
+      sample rate
+      <select id="setMicrophoneSampleRate">
+        <optgroup label="select sample rate"></optgroup>
+      </select>
+    </label>
+    <br />
+    <label>
+      bit depth
+      <select id="setMicrophoneBitDepth">
+        <optgroup label="select bit depth"></optgroup>
+      </select>
+    </label>
+
+    <br />
+    <audio id="microphoneStream" controls autoplay></audio>
   </body>
-  <script type="module">
-    //
-  </script>
 </html>
