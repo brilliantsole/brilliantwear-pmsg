@@ -261,7 +261,7 @@ setCameraResolutionSelect.value = cameraResolutions[2];
 setCameraResolutionSelect.addEventListener("input", (event) => {
   const resolution = +setCameraResolutionSelect.value;
   const device = getDevice();
-  device.setCameraConfiguration({ resolution });
+  device?.setCameraConfiguration({ resolution });
 });
 onCameraDeviceConnected((device) => {
   device.setCameraConfiguration({
@@ -315,7 +315,7 @@ const updateToggleMicrophoneButton = () => {
 
   let disabled = true;
   let innerText = "start microphone";
-  if (device) {
+  if (device?.hasMicrophone) {
     switch (device.microphoneStatus) {
       case "idle":
         disabled = false;
@@ -361,17 +361,20 @@ setMicrophoneSampleRateSelect.addEventListener("input", () => {
   });
 });
 onCameraDeviceConnected((device) => {
-  device.setMicrophoneConfiguration({
-    sampleRate: setMicrophoneSampleRateSelect.value,
-  });
-  device.addEventListener(
-    "microphoneStatus",
-    (event) => {
-      setMicrophoneSampleRateSelect.disabled =
-        device.microphoneStatus != "idle";
-    },
-    { signal: device.connectionAbortSignal, immediate: true },
-  );
+  setMicrophoneSampleRateSelect.disabled = !device.hasMicrophone;
+  if (device.hasMicrophone) {
+    device.setMicrophoneConfiguration({
+      sampleRate: setMicrophoneSampleRateSelect.value,
+    });
+    device.addEventListener(
+      "microphoneStatus",
+      (event) => {
+        setMicrophoneSampleRateSelect.disabled =
+          device.microphoneStatus != "idle";
+      },
+      { signal: device.connectionAbortSignal, immediate: true },
+    );
+  }
 });
 setMicrophoneSampleRateSelect.value = BW.MicrophoneSampleRates[1];
 
@@ -394,16 +397,20 @@ setMicrophoneBitDepthSelect.addEventListener("input", () => {
   });
 });
 onCameraDeviceConnected((device) => {
-  device.setMicrophoneConfiguration({
-    bitDepth: setMicrophoneBitDepthSelect.value,
-  });
-  device.addEventListener(
-    "microphoneStatus",
-    (event) => {
-      setMicrophoneBitDepthSelect.disabled = device.microphoneStatus != "idle";
-    },
-    { signal: device.connectionAbortSignal, immediate: true },
-  );
+  setMicrophoneBitDepthSelect.disabled = !device.hasMicrophone;
+  if (device.hasMicrophone) {
+    device.setMicrophoneConfiguration({
+      bitDepth: setMicrophoneBitDepthSelect.value,
+    });
+    device.addEventListener(
+      "microphoneStatus",
+      (event) => {
+        setMicrophoneBitDepthSelect.disabled =
+          device.microphoneStatus != "idle";
+      },
+      { signal: device.connectionAbortSignal, immediate: true },
+    );
+  }
 });
 setMicrophoneBitDepthSelect.value = BW.MicrophoneBitDepths[1];
 
@@ -432,4 +439,154 @@ onCameraDeviceConnected((device) => {
   device.audioContext = audioContext;
   microphoneStreamAudioElement.srcObject =
     device.microphoneMediaStreamDestination.stream;
+});
+
+// RECORDING
+
+/** @type {HTMLButtonElement} */
+const toggleCameraRecordingButton = document.getElementById(
+  "toggleCameraRecording",
+);
+toggleCameraRecordingButton.addEventListener("click", () => {
+  const device = getDevice();
+  device?.toggleCameraRecording(microphoneStream);
+});
+
+const updateToggleCameraRecordingButton = () => {
+  const device = getDevice();
+
+  toggleCameraRecordingButton.innerText = device.isRecordingCamera
+    ? "stop recording"
+    : "start recording";
+
+  toggleCameraRecordingButton.disabled = !(
+    device.isConnected && device.hasCamera
+  );
+};
+onCameraDeviceIsConnected((device, isConnected) => {
+  updateToggleCameraRecordingButton();
+  if (isConnected) {
+    device.addEventListener(
+      "isRecordingCamera",
+      () => {
+        updateToggleCameraRecordingButton();
+      },
+      { signal: device.connectionAbortSignal },
+    );
+  }
+});
+
+/** @type {HTMLSelectElement} */
+const selectMicrophoneSelect = document.getElementById("selectMicrophone");
+/** @type {HTMLOptGroupElement} */
+const selectMicrophoneOptgroup =
+  selectMicrophoneSelect.querySelector("optgroup");
+selectMicrophoneSelect.addEventListener("input", () => {
+  selectMicrophone(selectMicrophoneSelect.value);
+});
+
+selectMicrophoneSelect.addEventListener("click", async () => {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const audioDevices = devices.filter((device) => device.kind == "audioinput");
+  if (audioDevices.length == 1 && audioDevices[0].deviceId == "") {
+    const microphoneStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+    });
+    microphoneStream.getAudioTracks().forEach((track) => track.stop());
+    updateMicrophoneSources();
+  }
+});
+const updateMicrophoneSources = async () => {
+  const mediaDevices = await navigator.mediaDevices.enumerateDevices();
+  const audioDevices = mediaDevices.filter(
+    (device) => device.kind == "audioinput",
+  );
+  selectMicrophoneOptgroup.innerHTML = "";
+  selectMicrophoneOptgroup.appendChild(new Option("none"));
+  selectMicrophoneOptgroup.appendChild(new Option("device"));
+  audioDevices.forEach((audioInputDevice) => {
+    selectMicrophoneOptgroup.appendChild(
+      new Option(audioInputDevice.label, audioInputDevice.deviceId),
+    );
+  });
+  selectMicrophoneSelect.value = "none";
+  selectMicrophone(selectMicrophoneSelect.value);
+};
+/** @type {MediaStream?} */
+let microphoneStream;
+const selectMicrophone = async (deviceId) => {
+  const device = getDevice();
+
+  stopMicrophoneStream();
+  if (deviceId == "none") {
+    microphoneAudio.setAttribute("hidden", "");
+  } else if (deviceId == "device") {
+    microphoneStream = device?.microphoneMediaStreamDestination?.stream;
+  } else {
+    microphoneStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        deviceId: { exact: deviceId },
+        noiseSuppression: false,
+        echoCancellation: false,
+        autoGainControl: false,
+      },
+    });
+    microphoneAudio.srcObject = microphoneStream;
+    microphoneAudio.removeAttribute("hidden");
+  }
+
+  selectMicrophoneSelect.value = deviceId;
+};
+onCameraDeviceIsConnected((device, isConnected) => {
+  if (selectMicrophoneSelect.value != "device") {
+    return;
+  }
+  if (isConnected) {
+    selectMicrophone("device");
+  } else {
+    selectMicrophone("none");
+  }
+});
+const stopMicrophoneStream = () => {
+  const device = getDevice();
+  if (microphoneStream) {
+    if (microphoneStream != device?.microphoneMediaStreamDestination?.stream) {
+      microphoneStream.getAudioTracks().forEach((track) => track.stop());
+    }
+    microphoneStream = undefined;
+  }
+  microphoneAudio.srcObject = undefined;
+  microphoneAudio.setAttribute("hidden", "");
+};
+navigator.mediaDevices.addEventListener("devicechange", () =>
+  updateMicrophoneSources(),
+);
+updateMicrophoneSources();
+
+/** @type {HTMLVideoElement} */
+const cameraRecordingVideoElement = document.getElementById("cameraRecording");
+onCameraDeviceConnected((device) => {
+  device.addEventListener(
+    "cameraRecording",
+    (event) => {
+      if (cameraRecordingVideoElement.src) {
+        URL.revokeObjectURL(cameraRecordingVideoElement.src);
+      }
+      cameraRecordingVideoElement.src = event.message.url;
+    },
+    { signal: device.connectionAbortSignal },
+  );
+  device.addEventListener(
+    "microphoneStatus",
+    () => {
+      if (device.microphoneStatus == "streaming") {
+        selectMicrophone("device");
+      } else {
+        if (selectMicrophoneSelect.value == "device") {
+          selectMicrophone("none");
+        }
+      }
+    },
+    { signal: device.connectionAbortSignal },
+  );
 });
