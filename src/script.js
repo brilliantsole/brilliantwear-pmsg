@@ -447,9 +447,24 @@ onCameraDeviceConnected((device) => {
 const toggleCameraRecordingButton = document.getElementById(
   "toggleCameraRecording",
 );
-toggleCameraRecordingButton.addEventListener("click", () => {
+toggleCameraRecordingButton.addEventListener("click", async () => {
   const device = getDevice();
-  device?.toggleCameraRecording(microphoneStream);
+  if (!device) {
+    return;
+  }
+  device.toggleCameraRecording(microphoneStream);
+  if (device.isRecordingCamera) {
+    device.autoPicture = true;
+    if (selectMicrophoneSelect.value == "device") {
+      device.startMicrophone(undefined, false);
+    }
+    device.takePicture();
+  } else {
+    device.autoPicture = false;
+    if (selectMicrophoneSelect.value == "device") {
+      device.stopMicrophone();
+    }
+  }
 });
 
 const updateToggleCameraRecordingButton = () => {
@@ -581,10 +596,6 @@ onCameraDeviceConnected((device) => {
     () => {
       if (device.microphoneStatus == "streaming") {
         selectMicrophone("device");
-      } else {
-        if (selectMicrophoneSelect.value == "device") {
-          selectMicrophone("none");
-        }
       }
     },
     { signal: device.connectionAbortSignal },
