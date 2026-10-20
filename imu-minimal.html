@@ -1,0 +1,398 @@
+<html>
+  <head>
+    <title>BrilliantWear x PMSG | imu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.3/gh-fork-ribbon.min.css"
+    />
+    <script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+    <script>
+      // FIX for aframe-orbit-controls-component
+      THREE.Math = {};
+      THREE.Math.radToDeg = THREE.MathUtils.radToDeg;
+
+      THREE.Quaternion.prototype.inverse = THREE.Quaternion.prototype.invert;
+      THREE.Math = THREE.MathUtils;
+    </script>
+    <script src="https://cdn.rawgit.com/tizzle/aframe-orbit-controls-component/v0.1.14/dist/aframe-orbit-controls-component.min.js"></script>
+    <!-- <script type="module" src="./src/imu-script.js"></script> -->
+  </head>
+  <style>
+    .github-fork-ribbon:before {
+      background-color: #333;
+    }
+    a-scene {
+      width: 500px;
+      height: 500px;
+      margin: auto;
+      border-radius: 2rem;
+      overflow: hidden;
+      border: solid black;
+      box-sizing: border-box;
+    }
+  </style>
+  <body>
+    <a
+      class="github-fork-ribbon"
+      href="https://github.com/brilliantsole/brilliantwear-pmsg"
+      data-ribbon="View on GitHub"
+      title="View on GitHub"
+      target="_blank"
+      >View on GitHub</a
+    >
+
+    <h1>BrilliantWear x PMSG | imu</h1>
+
+    <button id="addDevice">add device</button>
+
+    <br /><br />
+    <button id="toggleOrientation" disabled>enable orientation</button>
+    <br />
+    <label>
+      orientation data:
+      <pre id="orientationData"></pre>
+    </label>
+    <br />
+    <button id="toggleAcceleration" disabled>enable acceleration</button>
+    <br />
+    <label>
+      acceleration data:
+      <pre id="accelerationData"></pre>
+    </label>
+    <br />
+    <button id="toggleTapDetector" disabled>enable tap detector</button>
+    <br />
+    <label>
+      tap data:
+      <pre id="tapDetectorData"></pre>
+    </label>
+    <br />
+
+    <a-scene
+      embedded
+      xr-mode-ui="enabled: false;"
+      device-orientation-permission-ui="enabled: false"
+      renderer="colorManagement: true;"
+    >
+      <a-assets>
+        <a-asset-item
+          id="glassesModel"
+          src="./assets/3d/glasses.glb"
+        ></a-asset-item>
+      </a-assets>
+
+      <a-light type="directional" position="2 2 -2" target=".target"></a-light>
+      <a-light type="directional" position="-2 2 2" target=".target"></a-light>
+      <a-light type="directional" position="2 -2 2" target=".target"></a-light>
+
+      <a-entity light="color: #BBB; type: ambient;"></a-entity>
+
+      <a-camera
+        class="camera"
+        camera="fov: 50; zoom: 3.2;"
+        position="0 0 1"
+        orbit-controls="
+        enableZoom: true;
+        autoRotate: false;
+        
+        target: .target;
+        enableDamping: true;
+        dampingFactor: 0.125;
+        rotateSpeed:0.25;
+        minDistance:0.75;
+        maxDistance:2;
+      "
+      ></a-camera>
+
+      <a-sky color="black"></a-sky>
+
+      <a-entity class="target">
+        <a-entity class="rotation">
+          <a-entity class="position" position="0 0 0.005">
+            <a-entity gltf-model="#glassesModel"></a-entity>
+          </a-entity>
+        </a-entity>
+      </a-entity>
+    </a-scene>
+  </body>
+  <script type="module">
+    import * as BW from "./src/brilliantwear/brilliantwear.module.min.js";
+
+    window.BW = BW;
+
+    // DEVICE HELPERS
+
+    /** @typedef {import("./brilliantwear/brilliantwear.module.min.js").Device} Device */
+
+    /** @param {Device} device */
+    const isDevicePMSG = (device) =>
+      device.deviceInformation.modelNumber == "PMSG" &&
+      device.hasSensorType("acceleration") &&
+      device.hasSensorType("orientation") &&
+      device.hasSensorType("tapDetector");
+    const getDevice = () =>
+      BW.DeviceManager.connectedDevices.find((device) => isDevicePMSG(device));
+
+    /** @param {(device: Device) => void} callback */
+    const onPMSGDeviceConnected = (callback) => {
+      BW.DeviceManager.addEventListener("deviceConnected", (event) => {
+        const { device } = event.message;
+        if (isDevicePMSG(device)) {
+          callback(device);
+        }
+      });
+    };
+    /** @param {(device: Device) => void} callback */
+    const onPMSGDeviceNotConnected = (callback) => {
+      BW.DeviceManager.addEventListener("deviceNotConnected", (event) => {
+        const { device } = event.message;
+        if (isDevicePMSG(device) && !getDevice()) {
+          callback(device);
+        }
+      });
+    };
+    /** @param {(device: Device, isConnected: boolean) => void} callback */
+    const onPMSGDeviceIsConnected = (callback) => {
+      onPMSGDeviceConnected((device) => callback(device, true));
+      onPMSGDeviceNotConnected((device) => callback(device, false));
+    };
+
+    // CONNECTION
+
+    /** @type {HTMLButtonElement} */
+    const addDeviceButton = document.getElementById("addDevice");
+    addDeviceButton.disabled = !(await BW.Device.CanConnect);
+    addDeviceButton.addEventListener("click", async () => {
+      let device = getDevice();
+      if (device) {
+        addDeviceButton.disabled = true;
+        addDeviceButton.innerText = "disconnecting";
+        await device.disconnect();
+        return;
+      }
+
+      addDeviceButton.disabled = true;
+      addDeviceButton.innerText = "adding device...";
+      device = await BW.Device.Connect();
+      if (device) {
+        if (!isDevicePMSG(device)) {
+          window.alert("device isn't PMSG - disconnecting now");
+          await device.disconnect();
+        }
+      } else {
+        addDeviceButton.innerText = "add device";
+      }
+      addDeviceButton.disabled = false;
+    });
+
+    onPMSGDeviceIsConnected((device, isConnected) => {
+      const hasDevice = Boolean(getDevice());
+      addDeviceButton.innerText = hasDevice ? "disconnect" : "add device";
+      addDeviceButton.disabled = false;
+    });
+
+    // A-FRAME
+    const scene = document.querySelector("a-scene");
+    const targetEntity = scene.querySelector(".target");
+    const targetPositionEntity = targetEntity.querySelector(".position");
+    const targetRotationEntity = targetEntity.querySelector(".rotation");
+
+    /**
+     * @param {import("./brilliantwear/brilliantwear.module.min.js").Vector3?} acceleration
+     * @param {number?} timestamp
+     */
+    const updateTargetPositionEntityPosition = (acceleration, timestamp) => {
+      const { x, y, z } = acceleration ?? { x: 0, y: 0, z: 0 };
+      targetPositionEntity.object3D.position.set(x, y, z).multiplyScalar(0.003);
+    };
+    /**
+     * @param {import("./brilliantwear/brilliantwear.module.min.js").Euler?} orientation
+     * @param {number?} timestamp
+     */
+    const updateTargetRotationEntityPosition = (orientation, timestamp) => {
+      // heading is always 0
+      const { pitch, heading, roll } = orientation ?? {
+        pitch: 0,
+        heading: 0,
+        roll: 0,
+      };
+      targetPositionEntity.object3D.rotation.set(
+        THREE.MathUtils.degToRad(pitch),
+        THREE.MathUtils.degToRad(heading),
+        THREE.MathUtils.degToRad(roll),
+        "YXZ",
+      );
+    };
+
+    // ACCELERATION
+    /** @type {HTMLButtonElement} */
+    const toggleAccelerationButton =
+      document.getElementById("toggleAcceleration");
+    toggleAccelerationButton.addEventListener("click", () => {
+      const device = getDevice();
+      console.log("toggling sensor", device);
+      device?.toggleSensor("acceleration", 20);
+    });
+
+    /** @type {HTMLPreElement} */
+    const accelerationDataPre = document.getElementById("accelerationData");
+
+    const updateToggleAccelerationButton = () => {
+      const device = getDevice();
+
+      let innerText = "enable acceleration";
+      let disabled = true;
+
+      if (device?.isConnected) {
+        innerText =
+          device.sensorConfiguration.acceleration > 0
+            ? "disable acceleration"
+            : "enable acceleration";
+        disabled = false;
+      }
+
+      toggleAccelerationButton.innerText = innerText;
+      toggleAccelerationButton.disabled = disabled;
+    };
+    onPMSGDeviceIsConnected((device, isConnected) => {
+      updateToggleAccelerationButton();
+      if (isConnected) {
+        device.addEventListener(
+          "getSensorConfiguration",
+          () => {
+            updateToggleAccelerationButton();
+            updateTargetPositionEntityPosition();
+          },
+          { signal: device.connectionAbortSignal },
+        );
+        device.addEventListener(
+          "acceleration",
+          (event) => {
+            const { acceleration, timestamp } = event.message;
+            accelerationDataPre.textContent = JSON.stringify(
+              { acceleration, timestamp },
+              null,
+              2,
+            );
+            updateTargetPositionEntityPosition(acceleration, timestamp);
+          },
+          { signal: device.connectionAbortSignal },
+        );
+      }
+    });
+
+    // ORIENTATION
+    /** @type {HTMLButtonElement} */
+    const toggleOrientationButton =
+      document.getElementById("toggleOrientation");
+    toggleOrientationButton.addEventListener("click", () => {
+      const device = getDevice();
+      console.log("toggling sensor", device);
+      device?.toggleSensor("orientation", 20);
+    });
+
+    /** @type {HTMLPreElement} */
+    const orientationDataPre = document.getElementById("orientationData");
+
+    const updateToggleOrientationButton = () => {
+      const device = getDevice();
+
+      let innerText = "enable orientation";
+      let disabled = true;
+
+      if (device?.isConnected) {
+        innerText =
+          device.sensorConfiguration.orientation > 0
+            ? "disable orientation"
+            : "enable orientation";
+        disabled = false;
+      }
+
+      toggleOrientationButton.innerText = innerText;
+      toggleOrientationButton.disabled = disabled;
+    };
+    onPMSGDeviceIsConnected((device, isConnected) => {
+      updateToggleOrientationButton();
+      if (isConnected) {
+        device.addEventListener(
+          "getSensorConfiguration",
+          () => {
+            updateToggleOrientationButton();
+            updateTargetRotationEntityPosition();
+          },
+          { signal: device.connectionAbortSignal },
+        );
+        device.addEventListener(
+          "orientation",
+          (event) => {
+            const { orientation, timestamp } = event.message;
+            orientationDataPre.textContent = JSON.stringify(
+              { orientation, timestamp },
+              null,
+              2,
+            );
+            updateTargetRotationEntityPosition(orientation, timestamp);
+          },
+          { signal: device.connectionAbortSignal },
+        );
+      }
+    });
+
+    // TAP DETECTOR
+    /** @type {HTMLButtonElement} */
+    const toggleTapDetectorButton =
+      document.getElementById("toggleTapDetector");
+    toggleTapDetectorButton.addEventListener("click", () => {
+      const device = getDevice();
+      console.log("toggling sensor", device);
+      device?.toggleSensor("tapDetector", 20);
+    });
+
+    /** @type {HTMLPreElement} */
+    const tapDetectorDataPre = document.getElementById("tapDetectorData");
+
+    const updateToggleTapDetectorButton = () => {
+      const device = getDevice();
+
+      let innerText = "enable tapDetector";
+      let disabled = true;
+
+      if (device?.isConnected) {
+        innerText =
+          device.sensorConfiguration.tapDetector > 0
+            ? "disable tapDetector"
+            : "enable tapDetector";
+        disabled = false;
+      }
+
+      toggleTapDetectorButton.innerText = innerText;
+      toggleTapDetectorButton.disabled = disabled;
+    };
+    onPMSGDeviceIsConnected((device, isConnected) => {
+      updateToggleTapDetectorButton();
+      if (isConnected) {
+        device.addEventListener(
+          "getSensorConfiguration",
+          () => {
+            updateToggleTapDetectorButton();
+          },
+          { signal: device.connectionAbortSignal },
+        );
+        device.addEventListener(
+          "tapDetector",
+          (event) => {
+            const { timestamp } = event.message;
+            tapDetectorDataPre.textContent = JSON.stringify(
+              { timestamp },
+              null,
+              2,
+            );
+          },
+          { signal: device.connectionAbortSignal },
+        );
+      }
+    });
+  </script>
+</html>
