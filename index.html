@@ -104,7 +104,10 @@
     <audio id="microphoneStream" controls autoplay></audio>
 
     <h2>Recording</h2>
-    <button disabled id="toggleCameraRecording">start recording</button>
+    <button disabled id="toggleCameraRecording">start recording camera</button>
+    <button disabled id="toggleMicrophoneRecording">
+      start recording microphone
+    </button>
     <br />
     <label>
       microphone
@@ -121,5 +124,6 @@
       id="cameraRecording"
       style="height: 200px; aspect-ratio: 4/3"
     ></video>
+    <audio id="microphoneRecording" controls></audio>
   </body>
 </html>

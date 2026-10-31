@@ -1,0 +1,1502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>BrilliantWear x PMSG</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <script src="./src/exif-reader/exif-reader.js"></script>
+    <style>
+      :root {
+        --bg: #e9ecf0;
+        --surface: #f8f9fb;
+        --surface-2: #eceff3;
+        --ink: #171c24;
+        --ink-2: #4a5362;
+        --ink-3: #7a8392;
+        --line: #d3d8e0;
+        --track: #b9c0cb;
+        --accent: #2f45ee;
+        --accent-ink: #fff;
+        --rec: #d92d20;
+        --ok: #1c9a5f;
+        --warn: #b7791f;
+        --stage: #12151a;
+        --stage-accent: #8c9bff;
+        --font:
+          "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", Roboto,
+          sans-serif;
+        --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f1216;
+          --surface: #171b21;
+          --surface-2: #1f242c;
+          --ink: #e8ebf0;
+          --ink-2: #a6aebb;
+          --ink-3: #7c8594;
+          --line: #2b323c;
+          --track: #3a424e;
+          --accent: #7788ff;
+          --accent-ink: #0e1120;
+          --rec: #ff5a4d;
+          --ok: #3ccb86;
+          --warn: #e0a33a;
+          --stage: #0a0c0f;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 15px/1.5 var(--font);
+        font-optical-sizing: auto;
+        -webkit-font-smoothing: antialiased;
+      }
+      .app {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 24px 48px;
+      }
+
+      /* header */
+      .top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 20px 0;
+      }
+      .brand {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+      .github {
+        color: var(--ink-2);
+        font-size: 14px;
+      }
+      .github:hover {
+        color: var(--ink);
+      }
+      .conn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--ink-2);
+        font-size: 13px;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--ink-3);
+        flex: none;
+      }
+      body[data-connected="true"] .pill .dot {
+        background: var(--ok);
+      }
+      .pill .text::before {
+        content: "No device";
+      }
+      body[data-connected="true"] .pill .text::before {
+        content: "Connected";
+      }
+
+      /* buttons */
+      button,
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 0 18px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        color: var(--ink);
+        font: 600 15px var(--font);
+        cursor: pointer;
+        text-decoration: none;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
+      }
+      button:hover:not(:disabled),
+      .btn:hover {
+        border-color: var(--ink-3);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      select:focus-visible,
+      input:focus-visible,
+      summary:focus-visible,
+      audio:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      #addDevice,
+      #takePicture,
+      #toggleMicrophone {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+      }
+      #addDevice.secondary,
+      #toggleMicrophone[data-active="true"] {
+        background: var(--surface);
+        border-color: var(--line);
+        color: var(--ink);
+      }
+
+      /* layout */
+      .layout {
+        display: grid;
+        gap: 24px;
+        align-items: start;
+        grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+      }
+      @media (max-width: 920px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      .pad {
+        padding: 20px;
+      }
+      .pad + .pad,
+      .panel > section + section {
+        border-top: 1px solid var(--line);
+      }
+      h2 {
+        margin: 0 0 14px;
+        font-size: 16px;
+        font-weight: 650;
+        letter-spacing: -0.005em;
+      }
+      .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      /* viewfinder */
+      .viewfinder {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        display: grid;
+        place-items: center;
+        background: var(--stage);
+        color: #aab2bf;
+        text-align: center;
+        padding: 32px;
+      }
+      .viewfinder img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: none;
+      }
+      .viewfinder.has-image img {
+        display: block;
+      }
+      .viewfinder.has-image .empty {
+        display: none;
+      }
+      .empty span {
+        display: none;
+        max-width: 28ch;
+      }
+      body[data-connected="false"] .empty-offline,
+      body[data-connected="true"] .empty-ready {
+        display: block;
+      }
+      .corner {
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        pointer-events: none;
+        border: 2px solid rgba(255, 255, 255, 0.7);
+      }
+      .tl {
+        top: 16px;
+        left: 16px;
+        border-right: 0;
+        border-bottom: 0;
+      }
+      .tr {
+        top: 16px;
+        right: 16px;
+        border-left: 0;
+        border-bottom: 0;
+      }
+      .bl {
+        bottom: 16px;
+        left: 16px;
+        border-right: 0;
+        border-top: 0;
+      }
+      .br {
+        bottom: 16px;
+        right: 16px;
+        border-left: 0;
+        border-top: 0;
+      }
+      progress {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 3px;
+        appearance: none;
+        border: 0;
+        background: rgba(255, 255, 255, 0.12);
+        transition: opacity 0.3s;
+      }
+      progress::-webkit-progress-bar {
+        background: transparent;
+      }
+      progress::-webkit-progress-value {
+        background: var(--stage-accent);
+      }
+      progress::-moz-progress-bar {
+        background: var(--stage-accent);
+      }
+      progress[value="0"],
+      progress[value="1"] {
+        opacity: 0;
+      }
+
+      .shutter-bar {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 16px;
+      }
+      .shutter-bar .btn {
+        justify-self: end;
+      }
+      #takePicture {
+        min-width: 11em;
+      }
+      #takePicture::before {
+        content: "";
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid currentColor;
+      }
+      @media (max-width: 560px) {
+        .shutter-bar {
+          grid-template-columns: 1fr 1fr;
+        }
+        #takePicture {
+          grid-column: 1 / -1;
+          grid-row: 1;
+        }
+      }
+
+      .switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .switch input {
+        appearance: none;
+        position: relative;
+        width: 38px;
+        height: 22px;
+        margin: 0;
+        border-radius: 999px;
+        background: var(--track);
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .switch input::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform 0.15s;
+      }
+      .switch input:checked {
+        background: var(--accent);
+      }
+      .switch input:checked::after {
+        transform: translateX(16px);
+      }
+      .switch input:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      details {
+        margin-top: 16px;
+      }
+      summary {
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--ink-2);
+      }
+      pre {
+        margin: 10px 0 0;
+        padding: 12px;
+        border-radius: 10px;
+        background: var(--surface-2);
+        font: 400 12px/1.6 var(--mono);
+        overflow-x: auto;
+      }
+      pre:empty::before {
+        content: "No metadata yet";
+        color: var(--ink-3);
+      }
+
+      /* forms */
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+      .field + .field {
+        margin-top: 14px;
+      }
+      .field > label,
+      .row {
+        font-size: 13px;
+        font-weight: 550;
+        color: var(--ink-2);
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+      }
+      .hint {
+        margin: 0;
+        font-size: 13px;
+        color: var(--ink-3);
+      }
+      select {
+        appearance: none;
+        width: 100%;
+        padding: 10px 36px 10px 12px;
+        font: inherit;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface-2) no-repeat right 12px center
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%237A8392' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+      }
+      select:disabled,
+      input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      input[type="range"] {
+        appearance: none;
+        width: 100%;
+        height: 22px;
+        margin: 0;
+        background: transparent;
+        --p: 61%;
+      }
+      input[type="range"]::-webkit-slider-runnable-track {
+        height: 4px;
+        border-radius: 2px;
+        background: linear-gradient(
+          to right,
+          var(--accent) var(--p),
+          var(--track) var(--p)
+        );
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        margin-top: -7px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 2px solid var(--accent);
+      }
+      input[type="range"]::-moz-range-track {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--track);
+      }
+      input[type="range"]::-moz-range-progress {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--accent);
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 2px solid var(--accent);
+      }
+      audio {
+        width: 100%;
+      }
+      #cameraQuality {
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+      }
+
+      /* device facts */
+      dl {
+        margin: 0;
+        display: grid;
+        gap: 10px;
+      }
+      dl div {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      dt {
+        color: var(--ink-2);
+      }
+      dd {
+        margin: 0;
+        text-align: right;
+        font-weight: 550;
+      }
+      .tag {
+        color: var(--warn);
+        font-weight: 500;
+        margin-left: 6px;
+      }
+
+      /* recording */
+      .rec-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .rec {
+        justify-content: flex-start;
+        padding: 0 16px;
+        min-height: 56px;
+      }
+      .rec::before {
+        content: "";
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex: none;
+        border: 2px solid var(--rec);
+      }
+      .rec[data-active="true"] {
+        background: var(--rec);
+        border-color: var(--rec);
+        color: #fff;
+      }
+      .rec[data-active="true"]::before {
+        background: #fff;
+        border-color: #fff;
+        animation: blink 1.2s ease-in-out infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0.25;
+        }
+      }
+      .outputs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      @media (max-width: 600px) {
+        .outputs,
+        .rec-buttons {
+          grid-template-columns: 1fr;
+        }
+      }
+      figure {
+        margin: 0;
+        display: grid;
+        gap: 8px;
+        align-content: start;
+      }
+      figcaption {
+        font-size: 13px;
+        font-weight: 550;
+        color: var(--ink-2);
+      }
+      video {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        display: block;
+        border-radius: 10px;
+        background: var(--stage);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body data-connected="false">
+    <div class="app">
+      <header class="top">
+        <div class="brand">
+          <h1>BrilliantWear x PMSG</h1>
+          <a
+            class="github"
+            href="https://github.com/brilliantsole/brilliantwear-pmsg"
+            target="_blank"
+            rel="noopener"
+            >GitHub</a
+          >
+        </div>
+        <div class="conn">
+          <span class="pill"
+            ><i class="dot"></i><span class="text"></span
+          ></span>
+          <button id="addDevice">Connect device</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <div class="panel">
+          <div class="viewfinder" id="viewfinder">
+            <img id="cameraImage" alt="Latest picture from the device camera" />
+            <div class="empty">
+              <span class="empty-offline"
+                >Connect a device to see its camera here.</span
+              >
+              <span class="empty-ready"
+                >Take a picture and it will show up here.</span
+              >
+            </div>
+            <i class="corner tl"></i><i class="corner tr"></i
+            ><i class="corner bl"></i><i class="corner br"></i>
+            <progress id="cameraImageProgress" value="0"></progress>
+          </div>
+
+          <section class="pad">
+            <div class="shutter-bar">
+              <label class="switch"
+                ><input type="checkbox" id="autoPicture" /> Auto picture</label
+              >
+              <button id="takePicture" disabled>Take picture</button>
+              <a class="btn" id="downloadPicture" hidden>Save picture</a>
+            </div>
+            <details open>
+              <summary>Image metadata</summary>
+              <pre id="cameraImageMetadata"></pre>
+            </details>
+          </section>
+
+          <section class="pad">
+            <h2>Recording</h2>
+            <div class="rec-buttons">
+              <button class="rec" id="toggleCameraRecording" disabled>
+                Record video
+              </button>
+              <button class="rec" id="toggleMicrophoneRecording" disabled>
+                Record audio
+              </button>
+            </div>
+            <div class="field" style="margin: 16px 0 20px">
+              <label for="selectMicrophone">Audio for video recordings</label>
+              <select id="selectMicrophone">
+                <optgroup label="Select a microphone"></optgroup>
+              </select>
+              <audio id="microphoneAudio" controls hidden></audio>
+            </div>
+            <div class="outputs">
+              <figure>
+                <figcaption>Latest video</figcaption>
+                <video controls playsinline id="cameraRecording"></video>
+              </figure>
+              <figure>
+                <figcaption>Latest audio</figcaption>
+                <audio id="microphoneRecording" controls></audio>
+              </figure>
+            </div>
+          </section>
+        </div>
+
+        <aside class="panel">
+          <section class="pad">
+            <h2>Device</h2>
+            <dl>
+              <div>
+                <dt>Name</dt>
+                <dd id="name">—</dd>
+              </div>
+              <div>
+                <dt>Camera</dt>
+                <dd>
+                  <span id="hasCamera">—</span
+                  ><span class="tag" id="isCameraDisabled"></span>
+                </dd>
+              </div>
+              <div>
+                <dt>Microphone</dt>
+                <dd>
+                  <span id="hasMicrophone">—</span
+                  ><span class="tag" id="isMicrophoneDisabled"></span>
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="pad">
+            <h2>Camera settings</h2>
+            <div class="field">
+              <label for="setCameraResolution">Resolution</label>
+              <select id="setCameraResolution">
+                <optgroup label="Select resolution"></optgroup>
+              </select>
+            </div>
+            <div class="field">
+              <div class="row">
+                <label for="setCameraQuality">Quality</label
+                ><span id="cameraQuality">61%</span>
+              </div>
+              <input
+                id="setCameraQuality"
+                type="range"
+                step="1"
+                value="61"
+                min="0"
+                max="100"
+              />
+            </div>
+          </section>
+
+          <section class="pad">
+            <h2>Microphone</h2>
+            <button id="toggleMicrophone" disabled style="width: 100%">
+              Start microphone
+            </button>
+            <div class="field" style="margin-top: 16px">
+              <label for="setMicrophoneSampleRate">Sample rate</label>
+              <select id="setMicrophoneSampleRate">
+                <optgroup label="Select sample rate"></optgroup>
+              </select>
+            </div>
+            <div class="field">
+              <label for="setMicrophoneBitDepth">Bit depth</label>
+              <select id="setMicrophoneBitDepth">
+                <optgroup label="Select bit depth"></optgroup>
+              </select>
+            </div>
+            <div class="field">
+              <label>Live audio</label>
+              <audio id="microphoneStream" controls autoplay></audio>
+            </div>
+          </section>
+        </aside>
+      </main>
+    </div>
+  </body>
+  <script type="module">
+    import * as BW from "./src/brilliantwear/brilliantwear.module.min.js";
+
+    window.BW = BW;
+
+    // DEVICE HELPERS
+
+    /** @typedef {import("./brilliantwear/brilliantwear.module.min.js").Device} Device */
+
+    /** @param {boolean?} requireCamera */
+    const getAVDevice = (requireCamera) =>
+      BW.DeviceManager.connectedDevices.find((device) => {
+        if (!device.hasCamera && !device.hasMicrophone) {
+          return false;
+        }
+        if (requireCamera && !device.hasCamera) {
+          return false;
+        }
+        return true;
+      });
+
+    /**
+     * @param {(device: Device) => void} callback
+     * @param {boolean?} requireCamera
+     */
+    const onAVDeviceConnected = (callback, requireCamera) => {
+      BW.DeviceManager.addEventListener("deviceConnected", (event) => {
+        const { device } = event.message;
+        if (device.hasCamera || device.hasMicrophone) {
+          if (!requireCamera || device.hasCamera) {
+            callback(device);
+          }
+        }
+      });
+    };
+    /** @param {(device: Device) => void} callback */
+    const onAVDeviceNotConnected = (callback) => {
+      BW.DeviceManager.addEventListener("deviceNotConnected", (event) => {
+        const { device } = event.message;
+        if ((device.hasCamera || device.hasMicrophone) && !getAVDevice()) {
+          callback(device);
+        }
+      });
+    };
+    /**
+     * @param {(device: Device, isConnected: boolean) => void} callback
+     * @param {boolean?} requireCamera
+     */
+    const onAVDeviceIsConnected = (callback, requireCamera) => {
+      onAVDeviceConnected((device) => callback(device, true), requireCamera);
+      onAVDeviceNotConnected(
+        (device) => callback(device, false),
+        requireCamera,
+      );
+    };
+
+    // CONNECTION
+
+    /** @type {HTMLButtonElement} */
+    const addDeviceButton = document.getElementById("addDevice");
+    addDeviceButton.disabled = !(await BW.Device.CanConnect);
+    addDeviceButton.addEventListener("click", async () => {
+      let device = getAVDevice();
+      if (device) {
+        addDeviceButton.disabled = true;
+        addDeviceButton.innerText = "Disconnecting…";
+        await device.disconnect();
+        return;
+      }
+
+      addDeviceButton.disabled = true;
+      addDeviceButton.innerText = "Connecting…";
+      device = await BW.Device.Connect();
+      if (device) {
+        if (!device.hasCamera && !device.hasMicrophone) {
+          window.alert(
+            "device doesn't have a camera or microphone - disconnecting now",
+          );
+          await device.disconnect();
+        }
+      }
+      if (!device?.isConnected) {
+        addDeviceButton.innerText = "Connect device";
+      }
+      addDeviceButton.disabled = false;
+    });
+
+    onAVDeviceIsConnected((device, isConnected) => {
+      const hasDevice = Boolean(getAVDevice());
+      addDeviceButton.innerText = hasDevice ? "Disconnect" : "Connect device";
+      addDeviceButton.classList.toggle("secondary", hasDevice);
+      document.body.dataset.connected = hasDevice;
+      addDeviceButton.disabled = false;
+    });
+
+    // DEVICE INFO
+
+    /** @type {HTMLSpanElement} */
+    const nameSpan = document.getElementById("name");
+
+    onAVDeviceIsConnected((device, isConnected) => {
+      nameSpan.innerText = isConnected ? device.name : "—";
+    });
+
+    /** @type {HTMLSpanElement} */
+    const hasCameraSpan = document.getElementById("hasCamera");
+    onAVDeviceIsConnected((device, isConnected) => {
+      hasCameraSpan.innerText = isConnected
+        ? device.hasCamera
+          ? "Yes"
+          : "No"
+        : "—";
+    });
+
+    /** @type {HTMLSpanElement} */
+    const isCameraDisabledSpan = document.getElementById("isCameraDisabled");
+    onAVDeviceConnected((device) => {
+      const updateIsCameraDisabledSpan = () => {
+        isCameraDisabledSpan.innerText =
+          device.isConnected && device.isCameraDisabled ? "(disabled)" : "";
+      };
+      const { connectionAbortSignal: signal } = device;
+      device.addEventListener(
+        "cameraStatus",
+        () => {
+          updateIsCameraDisabledSpan();
+        },
+        { signal },
+      );
+      device.addEventListener(
+        "notConnected",
+        () => {
+          updateIsCameraDisabledSpan();
+        },
+        { signal },
+      );
+    });
+
+    /** @type {HTMLSpanElement} */
+    const hasMicrophoneSpan = document.getElementById("hasMicrophone");
+    onAVDeviceIsConnected((device, isConnected) => {
+      hasMicrophoneSpan.innerText = isConnected
+        ? device.hasMicrophone
+          ? "Yes"
+          : "No"
+        : "—";
+    });
+
+    /** @type {HTMLSpanElement} */
+    const isMicrophoneDisabledSpan = document.getElementById(
+      "isMicrophoneDisabled",
+    );
+    onAVDeviceConnected((device) => {
+      const updateIsMicrophoneDisabledSpan = () => {
+        isMicrophoneDisabledSpan.innerText =
+          device.isConnected && device.isMicrophoneDisabled ? "(disabled)" : "";
+      };
+      const { connectionAbortSignal: signal } = device;
+      device.addEventListener(
+        "microphoneStatus",
+        () => {
+          updateIsMicrophoneDisabledSpan();
+        },
+        { signal },
+      );
+      device.addEventListener(
+        "notConnected",
+        () => {
+          updateIsMicrophoneDisabledSpan();
+        },
+        { signal },
+      );
+    });
+
+    // CAMERA
+    const takePictureButton = document.getElementById("takePicture");
+    takePictureButton.addEventListener("click", async () => {
+      const device = getAVDevice();
+      if (device) {
+        device.takePicture();
+      }
+    });
+    const updateTakePictureButton = () => {
+      const device = getAVDevice();
+
+      let disabled = true;
+      let innerText = "Take picture";
+      if (device) {
+        switch (device.cameraStatus) {
+          case "idle":
+            disabled = false;
+            break;
+          case "takingPicture":
+            innerText = "Taking picture…";
+            break;
+        }
+      }
+      takePictureButton.disabled = disabled;
+      takePictureButton.innerText = innerText;
+    };
+    onAVDeviceIsConnected((device, isConnected) => {
+      updateTakePictureButton();
+      if (isConnected) {
+        device.addEventListener(
+          "cameraStatus",
+          () => {
+            updateTakePictureButton();
+          },
+          device.connectionAbortOptions,
+        );
+      }
+    });
+
+    /** @type {HTMLInputElement} */
+    const autoPictureCheckbox = document.getElementById("autoPicture");
+    autoPictureCheckbox.addEventListener("input", () => {
+      const device = getAVDevice();
+      if (device) {
+        device.autoPicture = autoPictureCheckbox.checked;
+      }
+    });
+    onAVDeviceIsConnected((device, isConnected) => {
+      autoPictureCheckbox.disabled = isConnected && !device.hasCamera;
+    });
+    onAVDeviceConnected((device) => {
+      device.autoPicture = autoPictureCheckbox.checked;
+      device.addEventListener(
+        "autoPicture",
+        () => {
+          autoPictureCheckbox.checked = device.autoPicture;
+        },
+        device.connectionAbortOptions,
+      );
+    });
+
+    /** @type {HTMLProgressElement} */
+    const cameraImageProgress = document.getElementById("cameraImageProgress");
+    onAVDeviceConnected((device) => {
+      cameraImageProgress.value = 0;
+
+      device.addEventListener(
+        "cameraImageProgress",
+        (event) => {
+          if (event.message.type == "image") {
+            cameraImageProgress.value = event.message.progress;
+          }
+        },
+        device.connectionAbortOptions,
+      );
+    });
+
+    /** @type {HTMLPreElement} */
+    const cameraImageMetadataPre = document.getElementById(
+      "cameraImageMetadata",
+    );
+    /** @type {HTMLImageElement} */
+    const cameraImage = document.getElementById("cameraImage");
+    onAVDeviceConnected((device) => {
+      device.addEventListener("cameraImage", async (event) => {
+        if (cameraImage.src) {
+          URL.revokeObjectURL(cameraImage.src);
+        }
+        cameraImage.src = event.message.url;
+        document.getElementById("viewfinder").classList.add("has-image");
+        const save = document.getElementById("downloadPicture");
+        save.href = event.message.url;
+        save.download = `brilliantwear-${Date.now()}.jpg`;
+        save.hidden = false;
+
+        const tags = await ExifReader.load(event.message.arrayBuffer);
+
+        const cameraImageMetadata = {};
+        ["protocol", "capture_state", "dnr_present"].forEach((key) => {
+          if (!tags[key]) {
+            return;
+          }
+          cameraImageMetadata[key] = tags[key].value;
+        });
+
+        cameraImageMetadataPre.textContent = JSON.stringify(
+          cameraImageMetadata,
+          null,
+          2,
+        );
+      });
+    });
+
+    /** @type {HTMLSelectElement} */
+    const setCameraResolutionSelect = document.getElementById(
+      "setCameraResolution",
+    );
+    const setCameraResolutionOptgroup =
+      setCameraResolutionSelect.querySelector("optgroup");
+    const cameraResolutions = [
+      96, 160, 200, 260, 320, 416, 480, 640, 800, 1024,
+    ];
+    cameraResolutions.forEach((cameraResolution) => {
+      setCameraResolutionOptgroup.appendChild(
+        new Option(
+          `${cameraResolution} x ${Math.round((cameraResolution * 3) / 4)}`,
+          cameraResolution,
+        ),
+      );
+    });
+    setCameraResolutionSelect.value = cameraResolutions[2];
+
+    setCameraResolutionSelect.addEventListener("input", (event) => {
+      const resolution = +setCameraResolutionSelect.value;
+      const device = getAVDevice();
+      device?.setCameraConfiguration({ resolution });
+    });
+    onAVDeviceIsConnected((device, isConnected) => {
+      setCameraResolutionSelect.disabled = isConnected && !device.hasCamera;
+    });
+    onAVDeviceConnected((device) => {
+      device.setCameraConfiguration({
+        resolution: setCameraResolutionSelect.value,
+      });
+    }, true);
+
+    /** @type {HTMLSpanElement} */
+    const cameraQualitySpan = document.getElementById("cameraQuality");
+
+    /** @type {HTMLInputElement} */
+    const cameraQualityInput = document.getElementById("setCameraQuality");
+    cameraQualityInput.addEventListener(
+      "change",
+      () => {
+        const device = getAVDevice();
+        const qualityFactor = +cameraQualityInput.value;
+        if (device) {
+          device.setCameraConfiguration({
+            qualityFactor,
+          });
+        } else {
+          cameraQualitySpan.innerText = `${qualityFactor}%`;
+        }
+      },
+      true,
+    );
+    onAVDeviceIsConnected((device, isConnected) => {
+      cameraQualityInput.disabled = isConnected && !device.hasCamera;
+    });
+
+    onAVDeviceConnected((device) => {
+      const qualityFactor = +cameraQualityInput.value;
+      device.setCameraConfiguration({
+        qualityFactor,
+      });
+      device.addEventListener(
+        "getCameraConfiguration",
+        () => {
+          const { qualityFactor } = device.cameraConfiguration;
+          cameraQualitySpan.innerText = `${qualityFactor}%`;
+          cameraQualityInput.value = qualityFactor;
+          cameraQualityInput.style.setProperty("--p", `${qualityFactor}%`);
+        },
+        device.connectionAbortOptions,
+      );
+    }, true);
+
+    cameraQualityInput.addEventListener("input", () => {
+      cameraQualityInput.style.setProperty(
+        "--p",
+        `${cameraQualityInput.value}%`,
+      );
+      cameraQualitySpan.innerText = `${cameraQualityInput.value}%`;
+    });
+
+    // MICROPHONE
+
+    /** @type {HTMLButtonElement} */
+    const toggleMicrophoneButton = document.getElementById("toggleMicrophone");
+    toggleMicrophoneButton.addEventListener("click", () => {
+      const device = getAVDevice();
+      device?.toggleMicrophone();
+    });
+    const updateToggleMicrophoneButton = () => {
+      const device = getAVDevice();
+
+      let disabled = true;
+      let innerText = "Start microphone";
+      if (device?.hasMicrophone) {
+        switch (device.microphoneStatus) {
+          case "idle":
+            disabled = false;
+            break;
+          case "streaming":
+            disabled = false;
+            innerText = "Stop microphone";
+            break;
+        }
+      }
+      toggleMicrophoneButton.dataset.active =
+        device?.microphoneStatus == "streaming";
+      toggleMicrophoneButton.disabled = disabled;
+      toggleMicrophoneButton.innerText = innerText;
+    };
+    onAVDeviceIsConnected((device, isConnected) => {
+      updateToggleMicrophoneButton();
+      if (isConnected) {
+        device.addEventListener(
+          "microphoneStatus",
+          () => {
+            updateToggleMicrophoneButton();
+          },
+          device.connectionAbortOptions,
+        );
+      }
+    });
+
+    /** @type {HTMLSelectElement} */
+    const setMicrophoneSampleRateSelect = document.getElementById(
+      "setMicrophoneSampleRate",
+    );
+    const setMicrophoneSampleRateOptgroup =
+      setMicrophoneSampleRateSelect.querySelector("optgroup");
+    BW.MicrophoneSampleRates.forEach((sampleRate) => {
+      setMicrophoneSampleRateOptgroup.appendChild(
+        new Option(`${+sampleRate / 1000} kHz`, sampleRate),
+      );
+    });
+    setMicrophoneSampleRateSelect.addEventListener("input", () => {
+      const device = getAVDevice();
+      const sampleRate = setMicrophoneSampleRateSelect.value;
+      device?.setMicrophoneConfiguration({
+        sampleRate,
+      });
+    });
+    onAVDeviceConnected((device) => {
+      setMicrophoneSampleRateSelect.disabled = !device.hasMicrophone;
+      if (device.hasMicrophone) {
+        device.setMicrophoneConfiguration({
+          sampleRate: setMicrophoneSampleRateSelect.value,
+        });
+        device.addEventListener(
+          "microphoneStatus",
+          (event) => {
+            setMicrophoneSampleRateSelect.disabled =
+              device.microphoneStatus != "idle";
+          },
+          { ...device.connectionAbortOptions, immediate: true },
+        );
+      }
+    });
+    setMicrophoneSampleRateSelect.value = BW.MicrophoneSampleRates[1];
+
+    /** @type {HTMLSelectElement} */
+    const setMicrophoneBitDepthSelect = document.getElementById(
+      "setMicrophoneBitDepth",
+    );
+    const setMicrophoneBitDepthOptgroup =
+      setMicrophoneBitDepthSelect.querySelector("optgroup");
+    BW.MicrophoneBitDepths.forEach((bitDepth) => {
+      setMicrophoneBitDepthOptgroup.appendChild(
+        new Option(`${bitDepth}-bit`, bitDepth),
+      );
+    });
+    setMicrophoneBitDepthSelect.addEventListener("input", () => {
+      const device = getAVDevice();
+      const bitDepth = setMicrophoneBitDepthSelect.value;
+      device?.setMicrophoneConfiguration({
+        bitDepth,
+      });
+    });
+    onAVDeviceConnected((device) => {
+      setMicrophoneBitDepthSelect.disabled = !device.hasMicrophone;
+      if (device.hasMicrophone) {
+        device.setMicrophoneConfiguration({
+          bitDepth: setMicrophoneBitDepthSelect.value,
+        });
+        device.addEventListener(
+          "microphoneStatus",
+          (event) => {
+            setMicrophoneBitDepthSelect.disabled =
+              device.microphoneStatus != "idle";
+          },
+          { ...device.connectionAbortOptions, immediate: true },
+        );
+      }
+    });
+    setMicrophoneBitDepthSelect.value = BW.MicrophoneBitDepths[0];
+
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)(
+      {
+        sampleRate: 16_000,
+        latencyHint: "interactive",
+      },
+    );
+    const checkAudioContextState = () => {
+      const { state } = audioContext;
+      //   console.log({ audioContextState: state });
+      if (state != "running") {
+        document.addEventListener("click", () => audioContext.resume(), {
+          once: true,
+        });
+      }
+    };
+    audioContext.addEventListener("statechange", () => {
+      checkAudioContextState();
+    });
+    checkAudioContextState();
+
+    /** @type {HTMLAudioElement} */
+    const microphoneStreamAudioElement =
+      document.getElementById("microphoneStream");
+    onAVDeviceConnected((device) => {
+      device.audioContext = audioContext;
+      microphoneStreamAudioElement.srcObject =
+        device.microphoneMediaStreamDestination.stream;
+    });
+
+    // RECORDING
+
+    /** @type {HTMLButtonElement} */
+    const toggleCameraRecordingButton = document.getElementById(
+      "toggleCameraRecording",
+    );
+    toggleCameraRecordingButton.addEventListener("click", async () => {
+      const device = getAVDevice(true);
+      if (!device) {
+        return;
+      }
+      device.toggleCameraRecording(microphoneStream);
+      if (device.isRecordingCamera) {
+        device.autoPicture = true;
+        if (selectMicrophoneSelect.value == "device") {
+          device.startMicrophone(undefined, false);
+        }
+        device.takePicture();
+      } else {
+        device.autoPicture = false;
+        if (selectMicrophoneSelect.value == "device") {
+          device.stopMicrophone();
+        }
+      }
+    });
+
+    const toggleMicrophoneRecordingButton = document.getElementById(
+      "toggleMicrophoneRecording",
+    );
+    toggleMicrophoneRecordingButton.addEventListener("click", async () => {
+      const device = getAVDevice();
+      if (!device) {
+        return;
+      }
+      device.toggleMicrophoneRecording();
+      if (device.isRecordingMicrophone) {
+        device.startMicrophone();
+      } else {
+        device.stopMicrophone();
+      }
+    });
+
+    const updateToggleRecordingButtons = () => {
+      const device = getAVDevice();
+
+      const isRecording =
+        device?.isConnected &&
+        (device.isRecordingCamera || device.isRecordingMicrophone);
+
+      toggleCameraRecordingButton.innerText = device?.isRecordingCamera
+        ? "Stop recording"
+        : "Record video";
+      toggleMicrophoneRecordingButton.innerText = device?.isRecordingMicrophone
+        ? "Stop recording"
+        : "Record audio";
+
+      toggleCameraRecordingButton.dataset.active = Boolean(
+        device?.isRecordingCamera,
+      );
+      toggleMicrophoneRecordingButton.dataset.active = Boolean(
+        device?.isRecordingMicrophone,
+      );
+      toggleCameraRecordingButton.disabled =
+        !device?.hasCamera || device.isRecordingMicrophone;
+      toggleMicrophoneRecordingButton.disabled =
+        !device?.hasMicrophone || device.isRecordingCamera;
+    };
+    onAVDeviceIsConnected((device, isConnected) => {
+      updateToggleRecordingButtons();
+      if (isConnected) {
+        device.addEventListener(
+          "isRecordingCamera",
+          () => {
+            updateToggleRecordingButtons();
+          },
+          device.connectionAbortOptions,
+        );
+        device.addEventListener(
+          "isRecordingMicrophone",
+          () => {
+            updateToggleRecordingButtons();
+          },
+          device.connectionAbortOptions,
+        );
+      }
+    });
+
+    /** @type {HTMLSelectElement} */
+    const selectMicrophoneSelect = document.getElementById("selectMicrophone");
+    /** @type {HTMLOptGroupElement} */
+    const selectMicrophoneOptgroup =
+      selectMicrophoneSelect.querySelector("optgroup");
+    selectMicrophoneSelect.addEventListener("input", () => {
+      selectMicrophone(selectMicrophoneSelect.value);
+    });
+
+    selectMicrophoneSelect.addEventListener("click", async () => {
+      if (!navigator.mediaDevices) {
+        return;
+      }
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioDevices = devices.filter(
+        (device) => device.kind == "audioinput",
+      );
+      if (audioDevices.length == 1 && audioDevices[0].deviceId == "") {
+        const microphoneStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        microphoneStream.getAudioTracks().forEach((track) => track.stop());
+        updateMicrophoneSources();
+      }
+    });
+    const updateMicrophoneSources = async () => {
+      selectMicrophoneOptgroup.innerHTML = "";
+      selectMicrophoneOptgroup.appendChild(
+        new Option("None (silent video)", "none"),
+      );
+      selectMicrophoneOptgroup.appendChild(
+        new Option("Device microphone", "device"),
+      );
+
+      if (navigator.mediaDevices) {
+        const mediaDevices = await navigator.mediaDevices.enumerateDevices();
+        const audioDevices = mediaDevices.filter(
+          (device) => device.kind == "audioinput",
+        );
+        audioDevices.forEach((audioInputDevice) => {
+          selectMicrophoneOptgroup.appendChild(
+            new Option(audioInputDevice.label, audioInputDevice.deviceId),
+          );
+        });
+      }
+      selectMicrophoneSelect.value = "none";
+      selectMicrophone(selectMicrophoneSelect.value);
+    };
+    /** @type {MediaStream?} */
+    let microphoneStream;
+    const selectMicrophone = async (deviceId) => {
+      const device = getAVDevice();
+
+      stopMicrophoneStream();
+      if (deviceId == "none") {
+        microphoneAudio.setAttribute("hidden", "");
+      } else if (deviceId == "device") {
+        microphoneStream = device?.microphoneMediaStreamDestination?.stream;
+      } else {
+        microphoneStream = await navigator.mediaDevices?.getUserMedia({
+          audio: {
+            deviceId: { exact: deviceId },
+            noiseSuppression: false,
+            echoCancellation: false,
+            autoGainControl: false,
+          },
+        });
+        microphoneAudio.srcObject = microphoneStream;
+        microphoneAudio.removeAttribute("hidden");
+      }
+
+      selectMicrophoneSelect.value = deviceId;
+    };
+    onAVDeviceIsConnected((device, isConnected) => {
+      if (selectMicrophoneSelect.value != "device") {
+        return;
+      }
+      if (isConnected) {
+        selectMicrophone("device");
+      } else {
+        selectMicrophone("none");
+      }
+    });
+    onAVDeviceIsConnected((device, isConnected) => {
+      if (isConnected) {
+        if (device.hasMicrophone && !device.hasCamera) {
+          selectMicrophoneSelect.disabled = true;
+        }
+      } else {
+        selectMicrophoneSelect.disabled = false;
+      }
+    });
+    const stopMicrophoneStream = () => {
+      const device = getAVDevice();
+      if (microphoneStream) {
+        if (
+          microphoneStream != device?.microphoneMediaStreamDestination?.stream
+        ) {
+          microphoneStream.getAudioTracks().forEach((track) => track.stop());
+        }
+        microphoneStream = undefined;
+      }
+      microphoneAudio.srcObject = null;
+      microphoneAudio.setAttribute("hidden", "");
+    };
+    navigator.mediaDevices?.addEventListener("devicechange", () =>
+      updateMicrophoneSources(),
+    );
+    updateMicrophoneSources();
+
+    /** @type {HTMLVideoElement} */
+    const cameraRecordingVideoElement =
+      document.getElementById("cameraRecording");
+    onAVDeviceConnected((device) => {
+      device.addEventListener(
+        "cameraRecording",
+        (event) => {
+          if (cameraRecordingVideoElement.src) {
+            URL.revokeObjectURL(cameraRecordingVideoElement.src);
+          }
+          cameraRecordingVideoElement.src = event.message.url;
+        },
+        device.connectionAbortOptions,
+      );
+      device.addEventListener(
+        "microphoneStatus",
+        () => {
+          if (device.microphoneStatus == "streaming") {
+            selectMicrophone("device");
+          }
+        },
+        device.connectionAbortOptions,
+      );
+    }, true);
+    onAVDeviceIsConnected((device, isConnected) => {
+      cameraRecordingVideoElement.hidden = isConnected && !device.hasCamera;
+    });
+
+    /** @type {HTMLAudioElement} */
+    const microphoneRecordingAudioElement = document.getElementById(
+      "microphoneRecording",
+    );
+    onAVDeviceConnected((device) => {
+      device.addEventListener(
+        "microphoneRecording",
+        (event) => {
+          if (microphoneRecordingAudioElement.src) {
+            URL.revokeObjectURL(microphoneRecordingAudioElement.src);
+          }
+          microphoneRecordingAudioElement.src = event.message.url;
+        },
+        device.connectionAbortOptions,
+      );
+    });
+  </script>
+</html>

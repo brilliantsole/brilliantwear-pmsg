@@ -144,7 +144,7 @@ onPMSGDeviceIsConnected((device, isConnected) => {
         updateToggleAccelerationButton();
         updateTargetPositionEntityPosition();
       },
-      { signal: device.connectionAbortSignal },
+      device.connectionAbortOptions,
     );
     device.addEventListener(
       "acceleration",
@@ -157,7 +157,7 @@ onPMSGDeviceIsConnected((device, isConnected) => {
         );
         updateTargetPositionEntityPosition(acceleration, timestamp);
       },
-      { signal: device.connectionAbortSignal },
+      device.connectionAbortOptions,
     );
   }
 });
@@ -200,7 +200,7 @@ onPMSGDeviceIsConnected((device, isConnected) => {
         updateToggleOrientationButton();
         updateTargetRotationEntityPosition();
       },
-      { signal: device.connectionAbortSignal },
+      device.connectionAbortOptions,
     );
     device.addEventListener(
       "orientation",
@@ -213,7 +213,7 @@ onPMSGDeviceIsConnected((device, isConnected) => {
         );
         updateTargetRotationEntityPosition(orientation, timestamp);
       },
-      { signal: device.connectionAbortSignal },
+      device.connectionAbortOptions,
     );
   }
 });
@@ -255,7 +255,7 @@ onPMSGDeviceIsConnected((device, isConnected) => {
       () => {
         updateToggleTapDetectorButton();
       },
-      { signal: device.connectionAbortSignal },
+      device.connectionAbortOptions,
     );
     device.addEventListener(
       "tapDetector",
@@ -263,7 +263,7 @@ onPMSGDeviceIsConnected((device, isConnected) => {
         const { timestamp } = event.message;
         tapDetectorDataPre.textContent = JSON.stringify({ timestamp }, null, 2);
       },
-      { signal: device.connectionAbortSignal },
+      device.connectionAbortOptions,
     );
   }
 });

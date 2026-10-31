@@ -6,31 +6,48 @@ window.BW = BW;
 
 /** @typedef {import("./brilliantwear/brilliantwear.module.min.js").Device} Device */
 
-const getDevice = () =>
-  BW.DeviceManager.connectedDevices.find((device) => device.hasCamera);
+/** @param {boolean?} requireCamera */
+const getAVDevice = (requireCamera) =>
+  BW.DeviceManager.connectedDevices.find((device) => {
+    if (!device.hasCamera && !device.hasMicrophone) {
+      return false;
+    }
+    if (requireCamera && !device.hasCamera) {
+      return false;
+    }
+    return true;
+  });
 
-/** @param {(device: Device) => void} callback */
-const onCameraDeviceConnected = (callback) => {
+/**
+ * @param {(device: Device) => void} callback
+ * @param {boolean?} requireCamera
+ */
+const onAVDeviceConnected = (callback, requireCamera) => {
   BW.DeviceManager.addEventListener("deviceConnected", (event) => {
     const { device } = event.message;
-    if (device.hasCamera) {
-      callback(device);
+    if (device.hasCamera || device.hasMicrophone) {
+      if (!requireCamera || device.hasCamera) {
+        callback(device);
+      }
     }
   });
 };
 /** @param {(device: Device) => void} callback */
-const onCameraDeviceNotConnected = (callback) => {
+const onAVDeviceNotConnected = (callback) => {
   BW.DeviceManager.addEventListener("deviceNotConnected", (event) => {
     const { device } = event.message;
-    if (device.hasCamera && !getDevice()) {
+    if ((device.hasCamera || device.hasMicrophone) && !getAVDevice()) {
       callback(device);
     }
   });
 };
-/** @param {(device: Device, isConnected: boolean) => void} callback */
-const onCameraDeviceIsConnected = (callback) => {
-  onCameraDeviceConnected((device) => callback(device, true));
-  onCameraDeviceNotConnected((device) => callback(device, false));
+/**
+ * @param {(device: Device, isConnected: boolean) => void} callback
+ * @param {boolean?} requireCamera
+ */
+const onAVDeviceIsConnected = (callback, requireCamera) => {
+  onAVDeviceConnected((device) => callback(device, true), requireCamera);
+  onAVDeviceNotConnected((device) => callback(device, false), requireCamera);
 };
 
 // CONNECTION
@@ -39,7 +56,7 @@ const onCameraDeviceIsConnected = (callback) => {
 const addDeviceButton = document.getElementById("addDevice");
 addDeviceButton.disabled = !(await BW.Device.CanConnect);
 addDeviceButton.addEventListener("click", async () => {
-  let device = getDevice();
+  let device = getAVDevice();
   if (device) {
     addDeviceButton.disabled = true;
     addDeviceButton.innerText = "disconnecting";
@@ -51,18 +68,21 @@ addDeviceButton.addEventListener("click", async () => {
   addDeviceButton.innerText = "adding device...";
   device = await BW.Device.Connect();
   if (device) {
-    if (!device.hasCamera) {
-      window.alert("device doesn't have a camera - disconnecting now");
+    if (!device.hasCamera && !device.hasMicrophone) {
+      window.alert(
+        "device doesn't have a camera or microphone - disconnecting now",
+      );
       await device.disconnect();
     }
-  } else {
+  }
+  if (!device?.isConnected) {
     addDeviceButton.innerText = "add device";
   }
   addDeviceButton.disabled = false;
 });
 
-onCameraDeviceIsConnected((device, isConnected) => {
-  const hasDevice = Boolean(getDevice());
+onAVDeviceIsConnected((device, isConnected) => {
+  const hasDevice = Boolean(getAVDevice());
   addDeviceButton.innerText = hasDevice ? "disconnect" : "add device";
   addDeviceButton.disabled = false;
 });
@@ -72,19 +92,19 @@ onCameraDeviceIsConnected((device, isConnected) => {
 /** @type {HTMLSpanElement} */
 const nameSpan = document.getElementById("name");
 
-onCameraDeviceIsConnected((device, isConnected) => {
+onAVDeviceIsConnected((device, isConnected) => {
   nameSpan.innerText = isConnected ? device.name : "";
 });
 
 /** @type {HTMLSpanElement} */
 const hasCameraSpan = document.getElementById("hasCamera");
-onCameraDeviceIsConnected((device, isConnected) => {
+onAVDeviceIsConnected((device, isConnected) => {
   hasCameraSpan.innerText = isConnected ? device.hasCamera : "";
 });
 
 /** @type {HTMLSpanElement} */
 const isCameraDisabledSpan = document.getElementById("isCameraDisabled");
-onCameraDeviceConnected((device) => {
+onAVDeviceConnected((device) => {
   const updateIsCameraDisabledSpan = () => {
     isCameraDisabledSpan.innerText =
       device.isConnected && device.isCameraDisabled ? "(disabled)" : "";
@@ -108,7 +128,7 @@ onCameraDeviceConnected((device) => {
 
 /** @type {HTMLSpanElement} */
 const hasMicrophoneSpan = document.getElementById("hasMicrophone");
-onCameraDeviceIsConnected((device, isConnected) => {
+onAVDeviceIsConnected((device, isConnected) => {
   hasMicrophoneSpan.innerText = isConnected ? device.hasMicrophone : "";
 });
 
@@ -116,7 +136,7 @@ onCameraDeviceIsConnected((device, isConnected) => {
 const isMicrophoneDisabledSpan = document.getElementById(
   "isMicrophoneDisabled",
 );
-onCameraDeviceConnected((device) => {
+onAVDeviceConnected((device) => {
   const updateIsMicrophoneDisabledSpan = () => {
     isMicrophoneDisabledSpan.innerText =
       device.isConnected && device.isMicrophoneDisabled ? "(disabled)" : "";
@@ -141,13 +161,13 @@ onCameraDeviceConnected((device) => {
 // CAMERA
 const takePictureButton = document.getElementById("takePicture");
 takePictureButton.addEventListener("click", async () => {
-  const device = getDevice();
+  const device = getAVDevice();
   if (device) {
     device.takePicture();
   }
 });
 const updateTakePictureButton = () => {
-  const device = getDevice();
+  const device = getAVDevice();
 
   let disabled = true;
   let innerText = "take picture";
@@ -164,7 +184,7 @@ const updateTakePictureButton = () => {
   takePictureButton.disabled = disabled;
   takePictureButton.innerText = innerText;
 };
-onCameraDeviceIsConnected((device, isConnected) => {
+onAVDeviceIsConnected((device, isConnected) => {
   updateTakePictureButton();
   if (isConnected) {
     device.addEventListener(
@@ -172,7 +192,7 @@ onCameraDeviceIsConnected((device, isConnected) => {
       () => {
         updateTakePictureButton();
       },
-      { signal: device.connectionAbortSignal },
+      device.connectionAbortOptions,
     );
   }
 });
@@ -180,25 +200,28 @@ onCameraDeviceIsConnected((device, isConnected) => {
 /** @type {HTMLInputElement} */
 const autoPictureCheckbox = document.getElementById("autoPicture");
 autoPictureCheckbox.addEventListener("input", () => {
-  const device = getDevice();
+  const device = getAVDevice();
   if (device) {
     device.autoPicture = autoPictureCheckbox.checked;
   }
 });
-onCameraDeviceConnected((device) => {
+onAVDeviceIsConnected((device, isConnected) => {
+  autoPictureCheckbox.disabled = isConnected && !device.hasCamera;
+});
+onAVDeviceConnected((device) => {
   device.autoPicture = autoPictureCheckbox.checked;
   device.addEventListener(
     "autoPicture",
     () => {
       autoPictureCheckbox.checked = device.autoPicture;
     },
-    { signal: device.connectionAbortSignal },
+    device.connectionAbortOptions,
   );
 });
 
 /** @type {HTMLProgressElement} */
 const cameraImageProgress = document.getElementById("cameraImageProgress");
-onCameraDeviceConnected((device) => {
+onAVDeviceConnected((device) => {
   cameraImageProgress.value = 0;
 
   device.addEventListener(
@@ -208,7 +231,7 @@ onCameraDeviceConnected((device) => {
         cameraImageProgress.value = event.message.progress;
       }
     },
-    { signal: device.connectionAbortSignal },
+    device.connectionAbortOptions,
   );
 });
 
@@ -216,7 +239,7 @@ onCameraDeviceConnected((device) => {
 const cameraImageMetadataPre = document.getElementById("cameraImageMetadata");
 /** @type {HTMLImageElement} */
 const cameraImage = document.getElementById("cameraImage");
-onCameraDeviceConnected((device) => {
+onAVDeviceConnected((device) => {
   device.addEventListener("cameraImage", async (event) => {
     if (cameraImage.src) {
       URL.revokeObjectURL(cameraImage.src);
@@ -260,33 +283,43 @@ setCameraResolutionSelect.value = cameraResolutions[2];
 
 setCameraResolutionSelect.addEventListener("input", (event) => {
   const resolution = +setCameraResolutionSelect.value;
-  const device = getDevice();
+  const device = getAVDevice();
   device?.setCameraConfiguration({ resolution });
 });
-onCameraDeviceConnected((device) => {
+onAVDeviceIsConnected((device, isConnected) => {
+  setCameraResolutionSelect.disabled = isConnected && !device.hasCamera;
+});
+onAVDeviceConnected((device) => {
   device.setCameraConfiguration({
     resolution: setCameraResolutionSelect.value,
   });
-});
+}, true);
 
 /** @type {HTMLSpanElement} */
 const cameraQualitySpan = document.getElementById("cameraQuality");
 
 /** @type {HTMLInputElement} */
 const cameraQualityInput = document.getElementById("setCameraQuality");
-cameraQualityInput.addEventListener("change", () => {
-  const device = getDevice();
-  const qualityFactor = +cameraQualityInput.value;
-  if (device) {
-    device.setCameraConfiguration({
-      qualityFactor,
-    });
-  } else {
-    cameraQualitySpan.innerText = `${qualityFactor}%`;
-  }
+cameraQualityInput.addEventListener(
+  "change",
+  () => {
+    const device = getAVDevice();
+    const qualityFactor = +cameraQualityInput.value;
+    if (device) {
+      device.setCameraConfiguration({
+        qualityFactor,
+      });
+    } else {
+      cameraQualitySpan.innerText = `${qualityFactor}%`;
+    }
+  },
+  true,
+);
+onAVDeviceIsConnected((device, isConnected) => {
+  cameraQualityInput.disabled = isConnected && !device.hasCamera;
 });
 
-onCameraDeviceConnected((device) => {
+onAVDeviceConnected((device) => {
   const qualityFactor = +cameraQualityInput.value;
   device.setCameraConfiguration({
     qualityFactor,
@@ -298,20 +331,20 @@ onCameraDeviceConnected((device) => {
       cameraQualitySpan.innerText = `${qualityFactor}%`;
       cameraQualityInput.value = qualityFactor;
     },
-    { signal: device.connectionAbortSignal },
+    device.connectionAbortOptions,
   );
-});
+}, true);
 
 // MICROPHONE
 
 /** @type {HTMLButtonElement} */
 const toggleMicrophoneButton = document.getElementById("toggleMicrophone");
 toggleMicrophoneButton.addEventListener("click", () => {
-  const device = getDevice();
+  const device = getAVDevice();
   device?.toggleMicrophone();
 });
 const updateToggleMicrophoneButton = () => {
-  const device = getDevice();
+  const device = getAVDevice();
 
   let disabled = true;
   let innerText = "start microphone";
@@ -329,7 +362,7 @@ const updateToggleMicrophoneButton = () => {
   toggleMicrophoneButton.disabled = disabled;
   toggleMicrophoneButton.innerText = innerText;
 };
-onCameraDeviceIsConnected((device, isConnected) => {
+onAVDeviceIsConnected((device, isConnected) => {
   updateToggleMicrophoneButton();
   if (isConnected) {
     device.addEventListener(
@@ -337,7 +370,7 @@ onCameraDeviceIsConnected((device, isConnected) => {
       () => {
         updateToggleMicrophoneButton();
       },
-      { signal: device.connectionAbortSignal },
+      device.connectionAbortOptions,
     );
   }
 });
@@ -354,13 +387,13 @@ BW.MicrophoneSampleRates.forEach((sampleRate) => {
   );
 });
 setMicrophoneSampleRateSelect.addEventListener("input", () => {
-  const device = getDevice();
+  const device = getAVDevice();
   const sampleRate = setMicrophoneSampleRateSelect.value;
   device?.setMicrophoneConfiguration({
     sampleRate,
   });
 });
-onCameraDeviceConnected((device) => {
+onAVDeviceConnected((device) => {
   setMicrophoneSampleRateSelect.disabled = !device.hasMicrophone;
   if (device.hasMicrophone) {
     device.setMicrophoneConfiguration({
@@ -372,7 +405,7 @@ onCameraDeviceConnected((device) => {
         setMicrophoneSampleRateSelect.disabled =
           device.microphoneStatus != "idle";
       },
-      { signal: device.connectionAbortSignal, immediate: true },
+      { ...device.connectionAbortOptions, immediate: true },
     );
   }
 });
@@ -390,13 +423,13 @@ BW.MicrophoneBitDepths.forEach((bitDepth) => {
   );
 });
 setMicrophoneBitDepthSelect.addEventListener("input", () => {
-  const device = getDevice();
+  const device = getAVDevice();
   const bitDepth = setMicrophoneBitDepthSelect.value;
   device?.setMicrophoneConfiguration({
     bitDepth,
   });
 });
-onCameraDeviceConnected((device) => {
+onAVDeviceConnected((device) => {
   setMicrophoneBitDepthSelect.disabled = !device.hasMicrophone;
   if (device.hasMicrophone) {
     device.setMicrophoneConfiguration({
@@ -408,11 +441,11 @@ onCameraDeviceConnected((device) => {
         setMicrophoneBitDepthSelect.disabled =
           device.microphoneStatus != "idle";
       },
-      { signal: device.connectionAbortSignal, immediate: true },
+      { ...device.connectionAbortOptions, immediate: true },
     );
   }
 });
-setMicrophoneBitDepthSelect.value = BW.MicrophoneBitDepths[1];
+setMicrophoneBitDepthSelect.value = BW.MicrophoneBitDepths[0];
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)({
   sampleRate: 16_000,
@@ -435,7 +468,7 @@ checkAudioContextState();
 /** @type {HTMLAudioElement} */
 const microphoneStreamAudioElement =
   document.getElementById("microphoneStream");
-onCameraDeviceConnected((device) => {
+onAVDeviceConnected((device) => {
   device.audioContext = audioContext;
   microphoneStreamAudioElement.srcObject =
     device.microphoneMediaStreamDestination.stream;
@@ -448,7 +481,7 @@ const toggleCameraRecordingButton = document.getElementById(
   "toggleCameraRecording",
 );
 toggleCameraRecordingButton.addEventListener("click", async () => {
-  const device = getDevice();
+  const device = getAVDevice(true);
   if (!device) {
     return;
   }
@@ -467,26 +500,57 @@ toggleCameraRecordingButton.addEventListener("click", async () => {
   }
 });
 
-const updateToggleCameraRecordingButton = () => {
-  const device = getDevice();
+const toggleMicrophoneRecordingButton = document.getElementById(
+  "toggleMicrophoneRecording",
+);
+toggleMicrophoneRecordingButton.addEventListener("click", async () => {
+  const device = getAVDevice();
+  if (!device) {
+    return;
+  }
+  device.toggleMicrophoneRecording();
+  if (device.isRecordingMicrophone) {
+    device.startMicrophone();
+  } else {
+    device.stopMicrophone();
+  }
+});
+
+const updateToggleRecordingButtons = () => {
+  const device = getAVDevice();
+
+  const isRecording =
+    device?.isConnected &&
+    (device.isRecordingCamera || device.isRecordingMicrophone);
 
   toggleCameraRecordingButton.innerText = device?.isRecordingCamera
-    ? "stop recording"
-    : "start recording";
+    ? "stop recording camera"
+    : "start recording camera";
+  toggleMicrophoneRecordingButton.innerText = device?.isRecordingMicrophone
+    ? "stop recording microphone"
+    : "start recording microphone";
 
-  toggleCameraRecordingButton.disabled = !(
-    device?.isConnected && device?.hasCamera
-  );
+  toggleCameraRecordingButton.disabled =
+    !device.hasCamera || device.isRecordingMicrophone;
+  toggleMicrophoneRecordingButton.disabled =
+    !device.hasMicrophone || device.isRecordingCamera;
 };
-onCameraDeviceIsConnected((device, isConnected) => {
-  updateToggleCameraRecordingButton();
+onAVDeviceIsConnected((device, isConnected) => {
+  updateToggleRecordingButtons();
   if (isConnected) {
     device.addEventListener(
       "isRecordingCamera",
       () => {
-        updateToggleCameraRecordingButton();
+        updateToggleRecordingButtons();
       },
-      { signal: device.connectionAbortSignal },
+      device.connectionAbortOptions,
+    );
+    device.addEventListener(
+      "isRecordingMicrophone",
+      () => {
+        updateToggleRecordingButtons();
+      },
+      device.connectionAbortOptions,
     );
   }
 });
@@ -536,7 +600,7 @@ const updateMicrophoneSources = async () => {
 /** @type {MediaStream?} */
 let microphoneStream;
 const selectMicrophone = async (deviceId) => {
-  const device = getDevice();
+  const device = getAVDevice();
 
   stopMicrophoneStream();
   if (deviceId == "none") {
@@ -558,7 +622,7 @@ const selectMicrophone = async (deviceId) => {
 
   selectMicrophoneSelect.value = deviceId;
 };
-onCameraDeviceIsConnected((device, isConnected) => {
+onAVDeviceIsConnected((device, isConnected) => {
   if (selectMicrophoneSelect.value != "device") {
     return;
   }
@@ -568,8 +632,17 @@ onCameraDeviceIsConnected((device, isConnected) => {
     selectMicrophone("none");
   }
 });
+onAVDeviceIsConnected((device, isConnected) => {
+  if (isConnected) {
+    if (device.hasMicrophone && !device.hasCamera) {
+      selectMicrophoneSelect.disabled = true;
+    }
+  } else {
+    selectMicrophoneSelect.disabled = false;
+  }
+});
 const stopMicrophoneStream = () => {
-  const device = getDevice();
+  const device = getAVDevice();
   if (microphoneStream) {
     if (microphoneStream != device?.microphoneMediaStreamDestination?.stream) {
       microphoneStream.getAudioTracks().forEach((track) => track.stop());
@@ -586,7 +659,7 @@ updateMicrophoneSources();
 
 /** @type {HTMLVideoElement} */
 const cameraRecordingVideoElement = document.getElementById("cameraRecording");
-onCameraDeviceConnected((device) => {
+onAVDeviceConnected((device) => {
   device.addEventListener(
     "cameraRecording",
     (event) => {
@@ -595,7 +668,7 @@ onCameraDeviceConnected((device) => {
       }
       cameraRecordingVideoElement.src = event.message.url;
     },
-    { signal: device.connectionAbortSignal },
+    device.connectionAbortOptions,
   );
   device.addEventListener(
     "microphoneStatus",
@@ -604,6 +677,26 @@ onCameraDeviceConnected((device) => {
         selectMicrophone("device");
       }
     },
-    { signal: device.connectionAbortSignal },
+    device.connectionAbortOptions,
+  );
+}, true);
+onAVDeviceIsConnected((device, isConnected) => {
+  cameraRecordingVideoElement.hidden = isConnected && !device.hasCamera;
+});
+
+/** @type {HTMLAudioElement} */
+const microphoneRecordingAudioElement = document.getElementById(
+  "microphoneRecording",
+);
+onAVDeviceConnected((device) => {
+  device.addEventListener(
+    "microphoneRecording",
+    (event) => {
+      if (microphoneRecordingAudioElement.src) {
+        URL.revokeObjectURL(microphoneRecordingAudioElement.src);
+      }
+      microphoneRecordingAudioElement.src = event.message.url;
+    },
+    device.connectionAbortOptions,
   );
 });

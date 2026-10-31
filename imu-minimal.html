@@ -265,7 +265,7 @@
             updateToggleAccelerationButton();
             updateTargetPositionEntityPosition();
           },
-          { signal: device.connectionAbortSignal },
+          device.connectionAbortOptions,
         );
         device.addEventListener(
           "acceleration",
@@ -278,7 +278,7 @@
             );
             updateTargetPositionEntityPosition(acceleration, timestamp);
           },
-          { signal: device.connectionAbortSignal },
+          device.connectionAbortOptions,
         );
       }
     });
@@ -322,7 +322,7 @@
             updateToggleOrientationButton();
             updateTargetRotationEntityPosition();
           },
-          { signal: device.connectionAbortSignal },
+          device.connectionAbortOptions,
         );
         device.addEventListener(
           "orientation",
@@ -335,7 +335,7 @@
             );
             updateTargetRotationEntityPosition(orientation, timestamp);
           },
-          { signal: device.connectionAbortSignal },
+          device.connectionAbortOptions,
         );
       }
     });
@@ -378,7 +378,7 @@
           () => {
             updateToggleTapDetectorButton();
           },
-          { signal: device.connectionAbortSignal },
+          device.connectionAbortOptions,
         );
         device.addEventListener(
           "tapDetector",
@@ -390,7 +390,7 @@
               2,
             );
           },
-          { signal: device.connectionAbortSignal },
+          device.connectionAbortOptions,
         );
       }
     });
