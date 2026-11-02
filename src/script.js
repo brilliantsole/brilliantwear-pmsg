@@ -4,8 +4,6 @@ window.BW = BW;
 
 // DEVICE HELPERS
 
-/** @typedef {import("./brilliantwear/brilliantwear.module.min.js").Device} Device */
-
 /** @param {boolean?} requireCamera */
 const getAVDevice = (requireCamera) =>
   BW.DeviceManager.connectedDevices.find((device) => {
@@ -19,7 +17,7 @@ const getAVDevice = (requireCamera) =>
   });
 
 /**
- * @param {(device: Device) => void} callback
+ * @param {(device: BW.Device) => void} callback
  * @param {boolean?} requireCamera
  */
 const onAVDeviceConnected = (callback, requireCamera) => {
@@ -32,7 +30,7 @@ const onAVDeviceConnected = (callback, requireCamera) => {
     }
   });
 };
-/** @param {(device: Device) => void} callback */
+/** @param {(device: BW.Device) => void} callback */
 const onAVDeviceNotConnected = (callback) => {
   BW.DeviceManager.addEventListener("deviceNotConnected", (event) => {
     const { device } = event.message;
@@ -42,7 +40,7 @@ const onAVDeviceNotConnected = (callback) => {
   });
 };
 /**
- * @param {(device: Device, isConnected: boolean) => void} callback
+ * @param {(device: BW.Device, isConnected: boolean) => void} callback
  * @param {boolean?} requireCamera
  */
 const onAVDeviceIsConnected = (callback, requireCamera) => {
@@ -192,7 +190,7 @@ onAVDeviceIsConnected((device, isConnected) => {
       () => {
         updateTakePictureButton();
       },
-      device.connectionAbortOptions,
+      device.connectionAbortSignalObject,
     );
   }
 });
@@ -215,7 +213,7 @@ onAVDeviceConnected((device) => {
     () => {
       autoPictureCheckbox.checked = device.autoPicture;
     },
-    device.connectionAbortOptions,
+    device.connectionAbortSignalObject,
   );
 });
 
@@ -231,7 +229,7 @@ onAVDeviceConnected((device) => {
         cameraImageProgress.value = event.message.progress;
       }
     },
-    device.connectionAbortOptions,
+    device.connectionAbortSignalObject,
   );
 });
 
@@ -331,7 +329,7 @@ onAVDeviceConnected((device) => {
       cameraQualitySpan.innerText = `${qualityFactor}%`;
       cameraQualityInput.value = qualityFactor;
     },
-    device.connectionAbortOptions,
+    device.connectionAbortSignalObject,
   );
 }, true);
 
@@ -370,7 +368,7 @@ onAVDeviceIsConnected((device, isConnected) => {
       () => {
         updateToggleMicrophoneButton();
       },
-      device.connectionAbortOptions,
+      device.connectionAbortSignalObject,
     );
   }
 });
@@ -405,7 +403,7 @@ onAVDeviceConnected((device) => {
         setMicrophoneSampleRateSelect.disabled =
           device.microphoneStatus != "idle";
       },
-      { ...device.connectionAbortOptions, immediate: true },
+      { ...device.connectionAbortSignalObject, immediate: true },
     );
   }
 });
@@ -441,7 +439,7 @@ onAVDeviceConnected((device) => {
         setMicrophoneBitDepthSelect.disabled =
           device.microphoneStatus != "idle";
       },
-      { ...device.connectionAbortOptions, immediate: true },
+      { ...device.connectionAbortSignalObject, immediate: true },
     );
   }
 });
@@ -543,14 +541,14 @@ onAVDeviceIsConnected((device, isConnected) => {
       () => {
         updateToggleRecordingButtons();
       },
-      device.connectionAbortOptions,
+      device.connectionAbortSignalObject,
     );
     device.addEventListener(
       "isRecordingMicrophone",
       () => {
         updateToggleRecordingButtons();
       },
-      device.connectionAbortOptions,
+      device.connectionAbortSignalObject,
     );
   }
 });
@@ -668,7 +666,7 @@ onAVDeviceConnected((device) => {
       }
       cameraRecordingVideoElement.src = event.message.url;
     },
-    device.connectionAbortOptions,
+    device.connectionAbortSignalObject,
   );
   device.addEventListener(
     "microphoneStatus",
@@ -677,7 +675,7 @@ onAVDeviceConnected((device) => {
         selectMicrophone("device");
       }
     },
-    device.connectionAbortOptions,
+    device.connectionAbortSignalObject,
   );
 }, true);
 onAVDeviceIsConnected((device, isConnected) => {
@@ -697,6 +695,6 @@ onAVDeviceConnected((device) => {
       }
       microphoneRecordingAudioElement.src = event.message.url;
     },
-    device.connectionAbortOptions,
+    device.connectionAbortSignalObject,
   );
 });

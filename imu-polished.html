@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -8,696 +8,782 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap"
       rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
     />
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-        }
-      }
+    <script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+    <script>
+      // FIX for aframe-orbit-controls-component
+      THREE.Math = {};
+      THREE.Math.radToDeg = THREE.MathUtils.radToDeg;
+      THREE.Quaternion.prototype.inverse = THREE.Quaternion.prototype.invert;
+      THREE.Math = THREE.MathUtils;
     </script>
+    <script src="https://cdn.rawgit.com/tizzle/aframe-orbit-controls-component/v0.1.14/dist/aframe-orbit-controls-component.min.js"></script>
     <style>
       :root {
-        --paper: #e8ebf2;
-        --panel: #f7f8fb;
-        --ink: #1a1f33;
-        --muted: #6a7188;
-        --line: #d5d9e6;
-        --accent: #3a45f5;
-        --tap: #ff6b3d;
-        --ok: #1f9d6b;
-        font-family: "Bricolage Grotesque", system-ui, sans-serif;
-        font-variant-numeric: tabular-nums;
-        color: var(--ink);
+        --bg: #090b10;
+        --panel: #13161e;
+        --ink: #eef1f7;
+        --mute: #8a92a6;
+        --line: #232836;
+        --soft: #1b1f2b;
+        --accent: #7a86ff;
+        --accent2: #38e1c6;
+        --ok: #38e1c6;
+        --r: 18px;
+        color-scheme: dark;
       }
-      * {
-        box-sizing: border-box;
-      }
-      html,
+      * { box-sizing: border-box; }
       body {
-        height: 100%;
         margin: 0;
-        background: var(--paper);
+        background: radial-gradient(900px 500px at 12% -10%, #1b2250 0%, transparent 60%),
+          radial-gradient(700px 480px at 100% 0%, #0f3b3a 0%, transparent 55%), var(--bg);
+        background-attachment: fixed;
+        color: var(--ink);
+        font: 15px/1.45 Figtree, system-ui, sans-serif;
       }
-      .app {
-        display: grid;
-        grid-template-columns: 1fr 390px;
-        height: 100%;
-      }
-      .stage {
-        position: relative;
-        min-height: 0;
-        overflow: hidden;
-        background: radial-gradient(ellipse at 50% 45%, #fff 0%, #dfe3ee 70%);
-      }
-      #view {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        display: block;
-        touch-action: none;
-      }
-      .pulse {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 120px;
-        height: 120px;
-        margin: -60px;
-        border-radius: 50%;
-        border: 3px solid var(--tap);
-        opacity: 0;
-        pointer-events: none;
-      }
-      .pulse.go {
-        animation: pulse 0.7s ease-out;
-      }
-      @keyframes pulse {
-        from {
-          opacity: 0.9;
-          transform: scale(0.4);
-        }
-        to {
-          opacity: 0;
-          transform: scale(3.2);
-        }
-      }
-      .hint {
-        position: absolute;
-        left: 1.25rem;
-        bottom: 1rem;
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-      .reset {
-        position: absolute;
-        right: 1.25rem;
-        bottom: 0.9rem;
-      }
+      button, select, input { font: inherit; color: inherit; }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-      .panel {
+      header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 18px 24px;
+      }
+      header h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; display: flex; align-items: center; gap: 12px; }
+      header h1::before {
+        content: "";
+        width: 34px; height: 20px;
+        border-radius: 10px 10px 12px 12px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        box-shadow: 0 0 22px #7a86ff66;
+        -webkit-mask: radial-gradient(circle 6px at 9px 10px, #0000 98%, #000) , radial-gradient(circle 6px at 25px 10px, #0000 98%, #000);
+        -webkit-mask-composite: source-in;
+        mask: radial-gradient(circle 6px at 9px 10px, #0000 98%, #000), radial-gradient(circle 6px at 25px 10px, #0000 98%, #000);
+        mask-composite: intersect;
+      }
+      header h1 span { color: var(--accent2); font-weight: 600; font-size: 13px; border: 1px solid #38e1c655; border-radius: 99px; padding: 1px 9px; }
+      header .gh { color: var(--mute); font-size: 13px; text-decoration: none; }
+      header .gh:hover { color: var(--ink); }
+      .spacer { flex: 1; }
+      .status { display: flex; align-items: center; gap: 8px; color: var(--mute); font-size: 14px; }
+      .status i { width: 9px; height: 9px; border-radius: 50%; background: #c3c9d4; }
+      body.connected .status i { background: var(--ok); box-shadow: 0 0 0 4px #38e1c61f, 0 0 14px var(--ok); }
+      body.connected .status { color: var(--ink); }
+
+      .btn {
+        border: 1px solid var(--line);
         background: var(--panel);
-        border-left: 1px solid var(--line);
-        overflow-y: auto;
-        padding: 1.75rem 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1.25rem;
-      }
-      h1 {
-        margin: 0;
-        font-size: 2rem;
-        line-height: 1.05;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-      }
-      .sub {
-        margin: 0.35rem 0 0;
-        color: var(--muted);
-        font-size: 0.95rem;
-      }
-      .conn {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
-      .status {
-        display: flex;
-        align-items: center;
-        gap: 0.45rem;
-        font-size: 0.9rem;
-        color: var(--muted);
-        margin-left: auto;
-      }
-      .dot {
-        width: 0.6rem;
-        height: 0.6rem;
-        border-radius: 50%;
-        background: #b3b8c9;
-      }
-      .on .dot {
-        background: var(--ok);
-        box-shadow: 0 0 0 4px #1f9d6b26;
-      }
-
-      button {
-        font: inherit;
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-weight: 600;
         cursor: pointer;
       }
-      .btn {
-        border: 0;
-        border-radius: 999px;
-        padding: 0.65rem 1.2rem;
-        background: var(--ink);
-        color: #fff;
-        font-weight: 600;
+      .btn:hover:not(:disabled) { border-color: #3a4156; background: var(--soft); }
+      .btn.primary { background: linear-gradient(135deg, #6f7dff, #4f5bf0); border-color: transparent; color: #fff; box-shadow: 0 6px 20px #5864f044; }
+      .btn.primary:hover:not(:disabled) { filter: brightness(1.1); background: linear-gradient(135deg, #6f7dff, #4f5bf0); }
+      .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      
+
+      .app {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+        gap: 20px;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 24px 40px;
+        align-items: start;
       }
-      .btn.ghost {
-        background: #fff;
-        color: var(--ink);
-        border: 1px solid var(--line);
-        padding: 0.4rem 0.9rem;
-        font-size: 0.85rem;
+      .stage {
+        position: sticky;
+        top: 20px;
+        height: calc(100vh - 110px);
+        min-height: 420px;
+        border-radius: 24px;
+        overflow: hidden;
+        background: #05060a;
+        border: 1px solid #2a3046;
+        box-shadow: 0 30px 80px #0009, 0 0 80px #7a86ff1f, inset 0 0 60px #7a86ff10;
       }
-      .btn:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-      button:focus-visible {
-        outline: 3px solid var(--accent);
-        outline-offset: 2px;
+      a-scene { width: 100%; height: 100%; }
+      .hint {
+        position: absolute;
+        left: 16px;
+        bottom: 14px;
+        z-index: 5;
+        color: #ffffffb3;
+        font-size: 12.5px;
+        background: #0008;
+        backdrop-filter: blur(8px);
+        border: 1px solid #ffffff1c;
+        border-radius: 99px;
+        padding: 5px 12px;
+        pointer-events: none;
       }
 
-      .sensor {
-        border-top: 1px solid var(--line);
-        padding-top: 1rem;
+      .side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+      .panel { background: linear-gradient(180deg, #171a24, var(--panel)); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; box-shadow: 0 10px 30px #0006; }
+      .panel h2 { margin: 0 0 16px; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+      .panel h2::before { content: ""; width: 4px; height: 16px; border-radius: 2px; background: linear-gradient(var(--accent), var(--accent2)); }
+      .group + .group { margin-top: 18px; }
+      .group > span { display: block; font-size: 13px; color: var(--mute); margin-bottom: 6px; }
+
+      .seg { display: flex; flex-wrap: wrap; gap: 2px; background: var(--soft); border-radius: 12px; padding: 3px; border: 1px solid var(--line); }
+      .seg label { flex: 1 1 auto; position: relative; }
+      .seg input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+      .seg span {
+        display: block;
+        text-align: center;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--mute);
+        white-space: nowrap;
       }
-      .head {
+      .seg input:checked + span { background: linear-gradient(135deg, #5b66e6, #7a86ff); color: #fff; font-weight: 600; box-shadow: 0 4px 14px #5864f055; }
+      .seg input:disabled { cursor: not-allowed; }
+      .seg input:disabled + span { opacity: 0.45; }
+      .seg input:focus-visible + span { outline: 2px solid var(--accent); }
+
+      .vals {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 0.7rem;
+        flex-wrap: wrap;
+        gap: 6px 22px;
+        margin-top: 10px;
+        min-height: 40px;
+        font-family: "Geist Mono", ui-monospace, monospace;
       }
-      .head h2 {
+      .vals div { display: flex; flex-direction: column; }
+      .vals small { font-size: 11.5px; color: var(--mute); }
+      .vals b { font-weight: 500; font-size: 16px; min-width: 56px; color: var(--accent2); }
+      .vals .idle { color: var(--mute); font: 14px Figtree, sans-serif; align-self: center; }
+
+      .row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 10px 0; }
+      .row + .row { border-top: 1px solid var(--line); }
+      .row .val { font-family: "Geist Mono", ui-monospace, monospace; font-size: 14px; color: var(--mute); text-align: right; }
+      .row .val.live { color: var(--accent2); }
+
+      input[type="checkbox"], button[role="switch"] {
+        appearance: none;
+        -webkit-appearance: none;
+        flex: none;
+        width: 36px;
+        height: 20px;
         margin: 0;
-        font-size: 1.05rem;
-        font-weight: 600;
-      }
-      .switch {
-        position: relative;
-        width: 2.8rem;
-        height: 1.55rem;
-        border-radius: 999px;
+        padding: 0;
         border: 0;
-        background: #c3c8d8;
-        transition: background 0.2s;
+        border-radius: 99px;
+        background: #2c3345;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.15s;
       }
-      .switch::after {
+      input[type="checkbox"]::after, button[role="switch"]::after {
         content: "";
         position: absolute;
-        top: 0.2rem;
-        left: 0.2rem;
-        width: 1.15rem;
-        height: 1.15rem;
+        top: 2px; left: 2px;
+        width: 16px; height: 16px;
         border-radius: 50%;
         background: #fff;
-        transition: transform 0.2s;
+        box-shadow: 0 1px 2px #0006;
+        transition: transform 0.15s;
       }
-      .switch[aria-checked="true"] {
-        background: var(--accent);
-      }
-      .switch[aria-checked="true"]::after {
-        transform: translateX(1.25rem);
-      }
-      .switch:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-      }
+      input[type="checkbox"]:checked, button[role="switch"][aria-checked="true"] { background: linear-gradient(135deg, #5b66e6, var(--accent2)); }
+      input[type="checkbox"]:checked::after, button[role="switch"][aria-checked="true"]::after { transform: translateX(16px); }
+      input:disabled, button:disabled { cursor: not-allowed; }
+      button[role="switch"]:disabled { opacity: 0.45; }
 
-      .row {
-        display: grid;
-        grid-template-columns: 4.2rem 1fr 4.6rem;
-        align-items: center;
-        gap: 0.6rem;
-        margin: 0.4rem 0;
-        font-size: 0.9rem;
+      input[type="range"] { accent-color: var(--accent); width: 100%; min-width: 0; }
+      input[type="color"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 34px; height: 34px;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: none;
+        cursor: pointer;
+        flex: none;
+        box-shadow: 0 0 0 3px #ffffff0d;
       }
-      .row span:first-child {
-        color: var(--muted);
-      }
-      .row b {
-        text-align: right;
-        font-weight: 600;
-      }
-      .track {
-        position: relative;
-        height: 0.5rem;
-        border-radius: 999px;
-        background: #e3e6f0;
-      }
-      .track::before {
-        content: "";
-        position: absolute;
-        left: 50%;
-        top: -2px;
-        bottom: -2px;
-        width: 1px;
-        background: #aab0c4;
-      }
-      .fill {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 50%;
-        width: 0;
-        border-radius: 999px;
-        background: var(--accent);
-      }
-      .empty {
-        color: var(--muted);
-        font-size: 0.9rem;
-        margin: 0;
-      }
-      .tapcount {
-        font-size: 2.6rem;
-        font-weight: 800;
-        line-height: 1;
-        color: var(--tap);
-      }
-      .tapmeta {
-        color: var(--muted);
-        font-size: 0.85rem;
-        margin-top: 0.3rem;
-      }
-      footer {
-        margin-top: auto;
-        font-size: 0.85rem;
-      }
-      footer a {
-        color: var(--muted);
-      }
+      input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+      input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 50%; }
+      input[type="color"]::-moz-color-swatch { border: 0; border-radius: 50%; }
+      input[type="color"]:disabled { cursor: default; }
 
-      @media (max-width: 800px) {
-        .app {
-          grid-template-columns: 1fr;
-          grid-template-rows: 55vh auto;
-          height: auto;
-          min-height: 100%;
-        }
-        .panel {
-          border-left: 0;
-          border-top: 1px solid var(--line);
-        }
+      .led { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+      .led + .led { border-top: 1px solid var(--line); }
+      .led .name { width: 52px; flex: none; font-size: 14px; }
+      .led .ch { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mute); }
+      .empty { margin: 0; color: var(--mute); font-size: 14px; }
+
+      .vib-top { display: flex; gap: 10px; flex-wrap: wrap; }
+      select {
+        flex: 1;
+        min-width: 140px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 9px 10px;
+        background: var(--soft);
       }
-      @media (prefers-reduced-motion: reduce) {
-        .pulse.go {
-          animation: none;
-        }
-        .switch,
-        .switch::after {
-          transition: none;
-        }
+      .wave {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 64px;
+        margin: 14px 0;
+        padding: 8px;
+        border-radius: 12px;
+        background: #0d1017;
+        border: 1px solid var(--line);
       }
+      .wave i { background: linear-gradient(var(--accent2), var(--accent)); border-radius: 3px; min-width: 3px; box-shadow: 0 0 12px #7a86ff55; }
+      .wave .empty { align-self: center; margin: 0 auto; }
+      .vseg { display: grid; grid-template-columns: 22px 1fr 108px 32px; align-items: end; gap: 12px; padding: 8px 0; }
+      .vseg + .vseg { border-top: 1px solid var(--line); }
+      .vseg .idx { color: var(--mute); font-size: 13px; padding-bottom: 7px; }
+      .vseg label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--mute); position: relative; }
+      .vseg output { position: absolute; right: 0; top: 0; font-family: "Geist Mono", monospace; }
+      .vseg .unit { display: flex; align-items: center; gap: 6px; }
+      .vseg input[type="number"] { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; background: var(--soft); }
+      .vseg em { font-style: normal; color: var(--mute); }
+      .icon { width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; font-size: 20px; line-height: 1; color: var(--mute); cursor: pointer; }
+      .icon:hover { background: #3a1d24; color: #ff7b8a; }
+      .vib-actions { display: flex; gap: 10px; margin-top: 12px; }
+
+      @media (max-width: 900px) {
+        .app { grid-template-columns: 1fr; padding: 0 14px 32px; }
+        header { padding: 14px; flex-wrap: wrap; }
+        .stage { position: relative; top: 0; height: 72vw; min-height: 320px; }
+        .vseg { grid-template-columns: 22px 1fr 96px 32px; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
     </style>
   </head>
   <body>
-    <div class="app">
+    <header>
+      <h1>BrilliantWear × PMSG<span>IMU</span></h1>
+      <a
+        class="gh"
+        href="https://github.com/brilliantsole/brilliantwear-pmsg"
+        target="_blank"
+        rel="noopener"
+        >GitHub</a
+      >
+      <div class="spacer"></div>
+      <div class="status" role="status"><i></i><span id="statusText">Not connected</span></div>
+      <button id="addDevice" class="btn primary" disabled>Connect glasses</button>
+    </header>
+
+    <main class="app">
       <div class="stage">
-        <canvas id="view"></canvas>
-        <div class="pulse" id="pulse"></div>
-        <span class="hint">Drag to look around, scroll to zoom</span>
-        <button class="btn ghost reset" id="resetView">Reset view</button>
+        <div class="hint">Drag to orbit, scroll to zoom</div>
+        <a-scene
+          embedded
+          xr-mode-ui="enabled: false;"
+          device-orientation-permission-ui="enabled: false"
+          renderer="colorManagement: true;"
+        >
+          <a-assets>
+            <a-asset-item id="glassesModel" src="./assets/3d/glasses.glb"></a-asset-item>
+          </a-assets>
+
+          <a-light type="directional" position="2 2 -2" target=".target"></a-light>
+          <a-light type="directional" position="-2 2 2" target=".target"></a-light>
+          <a-light type="directional" position="2 -2 2" target=".target"></a-light>
+          <a-entity light="color: #BBB; type: ambient;"></a-entity>
+
+          <a-camera
+            class="camera"
+            camera="fov: 50; zoom: 3.2;"
+            position="0 0 1"
+            orbit-controls="
+              enableZoom: true;
+              autoRotate: false;
+              target: .target;
+              enableDamping: true;
+              dampingFactor: 0.125;
+              rotateSpeed:0.25;
+              minDistance:0.75;
+              maxDistance:2;
+            "
+          ></a-camera>
+
+          <a-sky color="#05060a"></a-sky>
+
+          <a-entity class="target">
+            <a-entity class="rotation">
+              <a-entity class="position" position="0 0 0.005">
+                <a-entity gltf-model="#glassesModel"></a-entity>
+              </a-entity>
+            </a-entity>
+          </a-entity>
+        </a-scene>
       </div>
 
-      <aside class="panel">
-        <header>
-          <h1>Glasses motion</h1>
-          <p class="sub">BrilliantWear × PMSG live sensor view</p>
-        </header>
-
-        <div class="conn" id="conn">
-          <button class="btn" id="addDevice">Connect glasses</button>
-          <span class="status"
-            ><i class="dot"></i><span id="statusText">Not connected</span></span
-          >
-        </div>
-
-        <section class="sensor">
-          <div class="head">
-            <h2>Orientation</h2>
-            <button
-              class="switch"
-              role="switch"
-              aria-checked="false"
-              aria-label="Orientation"
-              id="toggleOrientation"
-              disabled
-            ></button>
-          </div>
-          <div id="orientationData">
-            <p class="empty">Turn on to see the glasses’ angles.</p>
-          </div>
+      <div class="side">
+        <section class="panel">
+          <h2>Motion</h2>
+          <div id="motion"></div>
         </section>
 
-        <section class="sensor">
-          <div class="head">
-            <h2>Acceleration</h2>
-            <button
-              class="switch"
-              role="switch"
-              aria-checked="false"
-              aria-label="Acceleration"
-              id="toggleAcceleration"
-              disabled
-            ></button>
-          </div>
-          <div id="accelerationData">
-            <p class="empty">Turn on to see movement on each axis.</p>
-          </div>
+        <section class="panel">
+          <h2>Sensors</h2>
+          <div id="toggles"></div>
         </section>
 
-        <section class="sensor">
-          <div class="head">
-            <h2>Taps</h2>
-            <button
-              class="switch"
-              role="switch"
-              aria-checked="false"
-              aria-label="Tap detector"
-              id="toggleTapDetector"
-              disabled
-            ></button>
-          </div>
-          <div class="tapcount" id="tapCount">0</div>
-          <div class="tapmeta" id="tapMeta">Turn on, then tap the glasses.</div>
+        <section class="panel">
+          <h2>LEDs</h2>
+          <div id="leds"><p class="empty">Connect your glasses to control their LEDs.</p></div>
         </section>
 
-        <footer>
-          <a
-            href="https://github.com/brilliantsole/brilliantwear-pmsg"
-            target="_blank"
-            rel="noopener"
-            >View on GitHub</a
-          >
-        </footer>
-      </aside>
-    </div>
+        <section class="panel">
+          <h2>Vibration</h2>
+          <div class="vib-top">
+            <select id="vibrationSequenceSelect" aria-label="Vibration preset">
+              <option value="custom" selected>Custom sequence</option>
+              <option value="1,1000">Long buzz</option>
+              <option value="1,80,0,80,1,80">Double click</option>
+            </select>
+          </div>
+          <div class="wave" id="wave"></div>
+          <div id="vibrationSegments"></div>
+          <div class="vib-actions">
+            <button id="addVibrationSegment" class="btn">Add segment</button>
+            <button id="triggerVibration" class="btn primary" disabled>Vibrate</button>
+          </div>
+        </section>
+      </div>
+    </main>
 
     <script type="module">
-      import * as THREE from "three";
-      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
       import * as BW from "./src/brilliantwear/brilliantwear.module.min.js";
-
       window.BW = BW;
-      const $ = (id) => document.getElementById(id);
 
-      // ---------- DEVICE HELPERS ----------
-      const isDevicePMSG = (device) =>
-        device.deviceInformation.modelNumber == "PMSG" &&
-        device.hasSensorType("acceleration") &&
-        device.hasSensorType("orientation") &&
-        device.hasSensorType("tapDetector");
-      const getDevice = () =>
-        BW.DeviceManager.connectedDevices.find(isDevicePMSG);
+      const $ = (s, r = document) => r.querySelector(s);
+      const RATE = 20;
 
-      const onPMSGDeviceIsConnected = (callback) => {
-        BW.DeviceManager.addEventListener("deviceConnected", (e) => {
-          const { device } = e.message;
+      // DEVICE HELPERS
+      const isDevicePMSG = (device) => device.deviceInformation.modelNumber == "PMSG";
+      const getPMSGDevice = () => BW.DeviceManager.connectedDevices.find(isDevicePMSG);
+      /** @param {(device: BW.Device, isConnected: boolean) => void} callback */
+      const onConnectionChange = (callback) => {
+        BW.DeviceManager.addEventListener("deviceConnected", (event) => {
+          const { device } = event.message;
           if (isDevicePMSG(device)) callback(device, true);
         });
-        BW.DeviceManager.addEventListener("deviceNotConnected", (e) => {
-          const { device } = e.message;
-          if (isDevicePMSG(device) && !getDevice()) callback(device, false);
+        BW.DeviceManager.addEventListener("deviceNotConnected", (event) => {
+          const { device } = event.message;
+          if (isDevicePMSG(device) && !getPMSGDevice()) callback(device, false);
         });
       };
 
-      // ---------- CONNECTION ----------
-      const addDeviceButton = $("addDevice");
-      addDeviceButton.disabled = !(await BW.Device.CanConnect);
+      // CONNECTION
+      const addDeviceButton = $("#addDevice");
+      const statusText = $("#statusText");
+      const setButton = (text, disabled) => {
+        addDeviceButton.textContent = text;
+        addDeviceButton.disabled = disabled;
+      };
+      const canConnect = await BW.Device.CanConnect;
+      addDeviceButton.disabled = !canConnect;
+      if (!canConnect) statusText.textContent = "Bluetooth isn't available in this browser";
+
       addDeviceButton.addEventListener("click", async () => {
-        let device = getDevice();
+        let device = getPMSGDevice();
         if (device) {
-          addDeviceButton.disabled = true;
-          addDeviceButton.innerText = "Disconnecting…";
+          setButton("Disconnecting…", true);
           await device.disconnect();
           return;
         }
-        addDeviceButton.disabled = true;
-        addDeviceButton.innerText = "Connecting…";
+        setButton("Connecting…", true);
         device = await BW.Device.Connect();
-        if (device) {
-          if (!isDevicePMSG(device)) {
-            window.alert("This device isn’t a PMSG. Disconnecting now.");
-            await device.disconnect();
-          }
-        } else {
-          addDeviceButton.innerText = "Connect glasses";
+        if (device && !isDevicePMSG(device)) {
+          window.alert("device isn't PMSG - disconnecting now");
+          await device.disconnect();
         }
-        addDeviceButton.disabled = false;
+        if (!getPMSGDevice()) setButton("Connect glasses", false);
       });
 
-      onPMSGDeviceIsConnected(() => {
-        const has = Boolean(getDevice());
-        addDeviceButton.innerText = has ? "Disconnect" : "Connect glasses";
-        addDeviceButton.disabled = false;
-        $("conn").classList.toggle("on", has);
-        $("statusText").textContent = has ? "Connected" : "Not connected";
+      onConnectionChange((device, isConnected) => {
+        document.body.classList.toggle("connected", isConnected);
+        statusText.textContent = isConnected ? "Connected" : "Not connected";
+        addDeviceButton.classList.toggle("primary", !isConnected);
+        setButton(isConnected ? "Disconnect" : "Connect glasses", false);
       });
 
-      // ---------- THREE.JS ----------
-      const canvas = $("view");
-      const renderer = new THREE.WebGLRenderer({
-        canvas,
-        antialias: true,
-        alpha: true,
-      });
-      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      // A-FRAME
+      const scene = $("a-scene");
+      const targetEntity = scene.querySelector(".target");
+      const targetPositionEntity = targetEntity.querySelector(".position");
+      const modelEntity = targetEntity.querySelector("[gltf-model]");
 
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 10);
-      const HOME = new THREE.Vector3(0, 0.04, 0.55);
-      camera.position.copy(HOME);
-
-      const controls = new OrbitControls(camera, canvas);
-      Object.assign(controls, {
-        enableDamping: true,
-        dampingFactor: 0.125,
-        rotateSpeed: 0.5,
-        minDistance: 0.3,
-        maxDistance: 1.2,
-        enablePan: false,
-      });
-      $("resetView").addEventListener("click", () => {
-        camera.position.copy(HOME);
-        controls.target.set(0, 0, 0);
-        controls.update();
-      });
-
-      scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa3c0, 1.2));
-      [
-        [2, 2, -2],
-        [-2, 2, 2],
-        [2, -2, 2],
-      ].forEach((p) => {
-        const l = new THREE.DirectionalLight(0xffffff, 1.4);
-        l.position.set(...p);
-        scene.add(l);
-      });
-
-      // soft contact shadow under the glasses
-      const shadow = new THREE.Mesh(
-        new THREE.CircleGeometry(0.11, 48),
-        new THREE.MeshBasicMaterial({
-          color: 0x1a1f33,
-          transparent: true,
-          opacity: 0.12,
-          depthWrite: false,
-        }),
-      );
-      shadow.rotation.x = -Math.PI / 2;
-      shadow.position.y = -0.1;
-      shadow.scale.set(1, 0.45, 1);
-      scene.add(shadow);
-
-      // pivot: this group moves/rotates with sensor data
-      const pivot = new THREE.Group();
-      scene.add(pivot);
-
-      const buildFallbackGlasses = () => {
-        const g = new THREE.Group();
-        const frame = new THREE.MeshStandardMaterial({
-          color: 0x1a1f33,
-          roughness: 0.4,
+      const ledEntityLights = [];
+      const ledMeshes = [];
+      const ledMaterials = [];
+      modelEntity.addEventListener("model-loaded", () => {
+        const model = modelEntity.getObject3D("mesh");
+        if (!model) return;
+        model.traverse((_model) => {
+          if (_model.name.startsWith("LED_")) ledMeshes.push(_model);
         });
-        const lens = new THREE.MeshStandardMaterial({
-          color: 0x3a45f5,
-          transparent: true,
-          opacity: 0.35,
+        ledMeshes.sort((a, b) => +a.name.split("_")[1] - +b.name.split("_")[1]);
+        ledMeshes.forEach((ledMesh, index) => {
+          ledMaterials[index] = new THREE.MeshBasicMaterial({ color: 0x000000 });
+          ledMesh.material = ledMaterials[index];
+
+          const ledEntity = document.createElement("a-light");
+          const ledPosition = new THREE.Vector3(-0.002, 0, 0).add(ledMesh.position);
+          ledEntity.setAttribute("position", ledPosition.toArray().join(" "));
+          ledEntity.setAttribute("type", "point");
+          ledEntity.setAttribute("color", "black");
+          ledEntity.setAttribute("decay", "1");
+          ledEntity.setAttribute("intensity", "0.1");
+          ledEntity.setAttribute("distance", "0.1");
+          ledEntity.addEventListener("loaded", () => {
+            ledEntityLights[index] = ledEntity.getObject3D("light");
+          });
+          modelEntity.appendChild(ledEntity);
         });
-        [-0.045, 0.045].forEach((x) => {
-          const ring = new THREE.Mesh(
-            new THREE.TorusGeometry(0.035, 0.006, 12, 40),
-            frame,
-          );
-          ring.position.x = x;
-          const l = new THREE.Mesh(new THREE.CircleGeometry(0.035, 32), lens);
-          l.position.x = x;
-          const arm = new THREE.Mesh(
-            new THREE.BoxGeometry(0.006, 0.006, 0.12),
-            frame,
-          );
-          arm.position.set(x * 1.95, 0.01, -0.06);
-          g.add(ring, l, arm);
-        });
-        const bridge = new THREE.Mesh(
-          new THREE.BoxGeometry(0.02, 0.006, 0.006),
-          frame,
-        );
-        bridge.position.y = 0.012;
-        g.add(bridge);
-        return g;
+      });
+
+      const updateLed = (index, color) => {
+        if (!ledMaterials[index]) {
+          console.error(`invalid ledMaterials index ${index}`);
+          return;
+        }
+        ledMaterials[index].color.set(color);
+        ledEntityLights[index]?.color.set(color);
       };
-
-      new GLTFLoader().load(
-        "./assets/3d/glasses.glb",
-        (gltf) => pivot.add(gltf.scene),
-        undefined,
-        () => {
-          console.warn("glasses.glb not found, using placeholder");
-          pivot.add(buildFallbackGlasses());
-        },
-      );
-
-      // sensor-driven targets (smoothed each frame)
-      const targetPos = new THREE.Vector3();
-      const targetQuat = new THREE.Quaternion();
-      const tmpEuler = new THREE.Euler();
-
-      const setTargetPosition = (a) => {
-        const { x, y, z } = a ?? { x: 0, y: 0, z: 0 };
-        targetPos
-          .set(x, y, z)
-          .multiplyScalar(0.003)
-          .add(new THREE.Vector3(0, 0, 0.005));
+      const updateTargetPositionEntityPosition = (acceleration) => {
+        const { x, y, z } = acceleration ?? { x: 0, y: 0, z: 0 };
+        targetPositionEntity.object3D.position.set(x, y, z).multiplyScalar(0.05);
       };
-      const setTargetRotation = (o) => {
-        const { pitch, heading, roll } = o ?? { pitch: 0, heading: 0, roll: 0 };
-        tmpEuler.set(
+      const updateTargetRotationEntityEuler = (orientation) => {
+        const { pitch, heading, roll } = orientation ?? { pitch: 0, heading: 0, roll: 0 };
+        targetPositionEntity.object3D.rotation.set(
           THREE.MathUtils.degToRad(pitch),
           THREE.MathUtils.degToRad(heading),
           THREE.MathUtils.degToRad(roll),
           "YXZ",
         );
-        targetQuat.setFromEuler(tmpEuler);
       };
-      setTargetPosition();
-      setTargetRotation();
-
-      const resize = () => {
-        const { clientWidth: w, clientHeight: h } = canvas;
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
+      const updateTargetRotationEntityQuaternion = ({ x, y, z, w }) => {
+        targetPositionEntity.object3D.quaternion.set(x, y, z, w);
       };
-      new ResizeObserver(resize).observe(canvas);
-      resize();
 
-      renderer.setAnimationLoop(() => {
-        pivot.position.lerp(targetPos, 0.25);
-        pivot.quaternion.slerp(targetQuat, 0.25);
-        controls.update();
-        renderer.render(scene, camera);
+      // MOTION (rotation + position sources)
+      const fmtNum = (n) => (Number.isInteger(n) ? n : n.toFixed(2));
+      const renderValues = (v) =>
+        v && typeof v == "object"
+          ? Object.entries(v)
+              .map(([k, x]) => `<div><small>${k}</small><b>${typeof x == "number" ? fmtNum(x) : x}</b></div>`)
+              .join("")
+          : `<div><b>${v}</b></div>`;
+      const idleValues = `<span class="idle">No data</span>`;
+
+      const motionGroups = [
+        {
+          id: "rotation",
+          title: "Rotation",
+          types: { gameRotation: "Game rotation", orientation: "Orientation", gyroscope: "Gyroscope" },
+          apply: {
+            gameRotation: (v) => updateTargetRotationEntityQuaternion(v),
+            orientation: (v) => updateTargetRotationEntityEuler(v),
+            gyroscope: (g) => updateTargetRotationEntityEuler({ pitch: g.x, heading: g.y, roll: g.z }),
+          },
+          reset: () => updateTargetRotationEntityEuler(),
+        },
+        {
+          id: "position",
+          title: "Position",
+          types: { linearAcceleration: "Linear", acceleration: "Acceleration", gravity: "Gravity" },
+          apply: Object.fromEntries(
+            ["linearAcceleration", "acceleration", "gravity"].map((t) => [t, (v) => updateTargetPositionEntityPosition(v)]),
+          ),
+          reset: () => updateTargetPositionEntityPosition(),
+        },
+      ];
+
+      motionGroups.forEach((group) => {
+        const el = document.createElement("div");
+        el.className = "group";
+        const options = ["none", ...Object.keys(group.types)];
+        el.innerHTML = `
+          <span>${group.title}</span>
+          <div class="seg" role="radiogroup" aria-label="${group.title} source">
+            ${options
+              .map(
+                (t) => `<label><input type="radio" name="${group.id}" value="${t}" disabled ${t == "none" ? "checked" : ""}><span>${
+                  t == "none" ? "Off" : group.types[t]
+                }</span></label>`,
+              )
+              .join("")}
+          </div>
+          <div class="vals">${idleValues}</div>`;
+        $("#motion").append(el);
+        group.vals = $(".vals", el);
+        group.radios = [...el.querySelectorAll("input")];
+        group.radios.forEach((radio) =>
+          radio.addEventListener("change", () => {
+            getPMSGDevice()?.setSensorConfiguration(
+              Object.fromEntries(Object.keys(group.types).map((t) => [t, t == radio.value ? RATE : 0])),
+            );
+          }),
+        );
       });
 
-      // ---------- SENSOR UI ----------
-      const fmt = (n, d = 1) => (Number.isFinite(n) ? n.toFixed(d) : "0.0");
-      const buildRows = (container, labels, unit) => {
-        container.innerHTML = labels
-          .map(
-            (l) =>
-              `<div class="row"><span>${l}</span><div class="track"><div class="fill"></div></div><b>0.0${unit}</b></div>`,
-          )
-          .join("");
-        return [...container.querySelectorAll(".row")].map((r) => ({
-          fill: r.querySelector(".fill"),
-          val: r.querySelector("b"),
-        }));
-      };
-      const setRow = (row, v, range, unit) => {
-        const p = Math.max(-1, Math.min(1, v / range));
-        row.fill.style.left = `${50 + Math.min(0, p) * 50}%`;
-        row.fill.style.width = `${Math.abs(p) * 50}%`;
-        row.val.textContent = fmt(v) + unit;
-      };
-
-      const orientationEl = $("orientationData");
-      const accelerationEl = $("accelerationData");
-      let orientationRows, accelerationRows;
-
-      const setupToggle = (type, button, onConfigChange, onData) => {
-        button.addEventListener("click", () =>
-          getDevice()?.toggleSensor(type, 20),
-        );
-        const refresh = () => {
-          const device = getDevice();
-          const connected = Boolean(device?.isConnected);
-          button.disabled = !connected;
-          button.setAttribute(
-            "aria-checked",
-            String(connected && device.sensorConfiguration[type] > 0),
-          );
-        };
-        onPMSGDeviceIsConnected((device, isConnected) => {
-          refresh();
-          if (!isConnected) return;
-          const opts = device.connectionAbortOptions;
-          device.addEventListener(
-            "getSensorConfiguration",
-            () => {
-              refresh();
-              onConfigChange(device);
-            },
-            opts,
-          );
-          device.addEventListener(type, (e) => onData(e.message), opts);
+      onConnectionChange((device, isConnected) => {
+        motionGroups.forEach((group) => {
+          group.radios.forEach((radio) => {
+            radio.disabled = !isConnected || (radio.value != "none" && !device.hasSensorType(radio.value));
+          });
+          if (!isConnected) {
+            group.radios[0].checked = true;
+            group.vals.innerHTML = idleValues;
+          }
         });
-        refresh();
+        if (!isConnected) return;
+
+        motionGroups.forEach((group) => {
+          Object.keys(group.types).forEach((type) => {
+            device.addEventListener(
+              type,
+              (event) => {
+                const value = event.message[type];
+                group.vals.innerHTML = renderValues(value);
+                group.apply[type](value, event.message.timestamp);
+              },
+              device.connectionAbortSignalObject,
+            );
+          });
+        });
+        device.addEventListener(
+          "getSensorConfiguration",
+          () => {
+            motionGroups.forEach((group) => {
+              group.reset();
+              const active = Object.keys(group.types).find((t) => device.sensorConfiguration[t] > 0) ?? "none";
+              group.radios.forEach((radio) => (radio.checked = radio.value == active));
+              if (active == "none") group.vals.innerHTML = idleValues;
+            });
+          },
+          device.connectionAbortSignalObject,
+        );
+      });
+
+      // TOGGLE SENSORS
+      let counts = {};
+      const humanize = (s) => s.replace(/([A-Z])/g, " $1").toLowerCase();
+      const toggleSensors = [
+        ["tapDetector", "Tap detector", (_, key) => `tap ×${(counts[key] = (counts[key] ?? 0) + 1)}`],
+        ["deviceOrientation", "Device orientation", (v) => humanize(v)],
+        ["stepDetector", "Step detector", (_, key) => `step ×${(counts[key] = (counts[key] ?? 0) + 1)}`],
+        ["stepCounter", "Step counter", (v) => `${v} steps`],
+        ["activity", "Activity recognition", (v) => (v.still ? "still" : "moving")],
+        ["light", "Light sensor", (v) => fmtNum(v)],
+      ];
+      const toggleRows = toggleSensors.map(([key, label, format]) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.innerHTML = `<button class="switch" role="switch" aria-checked="false" aria-label="${label}" disabled></button><span>${label}</span><span class="val">—</span>`;
+        $("#toggles").append(row);
+        const button = $("button", row);
+        const val = $(".val", row);
+        button.addEventListener("click", () => getPMSGDevice()?.toggleSensor(key, RATE));
+        return { key, format, button, val };
+      });
+
+      onConnectionChange((device, isConnected) => {
+        const update = () => {
+          toggleRows.forEach(({ key, button, val }) => {
+            const supported = isConnected && device.hasSensorType(key);
+            const on = supported && device.sensorConfiguration[key] > 0;
+            button.disabled = !supported;
+            button.title = isConnected && !supported ? "Not supported on this device" : "";
+            button.setAttribute("aria-checked", on);
+            if (!on) {
+              val.textContent = "—";
+              val.classList.remove("live");
+              counts[key] = 0;
+            }
+          });
+        };
+        update();
+        if (!isConnected) return;
+        device.addEventListener("getSensorConfiguration", update, device.connectionAbortSignalObject);
+        toggleRows.forEach(({ key, format, val }) => {
+          device.addEventListener(
+            key,
+            (event) => {
+              val.textContent = format(event.message[key], key);
+              val.classList.add("live");
+            },
+            device.connectionAbortSignalObject,
+          );
+        });
+      });
+
+      // LEDS
+      const setLedInterval = 20;
+      const ledsContainer = $("#leds");
+      const ledEmpty = `<p class="empty">Connect your glasses to control their LEDs.</p>`;
+      const colorInput = `<input type="color" disabled aria-label="LED color" />`;
+      const ledControls = {
+        analogSingle: `${colorInput}<input type="range" min="0" max="255" step="1" value="0" aria-label="Brightness" />`,
+        digitalSingle: `${colorInput}<input type="checkbox" aria-label="On" />`,
+        digitalRGB: `${colorInput}${["r", "g", "b"]
+          .map((c) => `<label class="ch">${c}<input type="checkbox" class="${c}" /></label>`)
+          .join("")}`,
+        analogRGB: `<input type="color" aria-label="LED color" />`,
+      };
+      /** @type {{range?: HTMLInputElement, colorInput?: HTMLInputElement, checkbox?: HTMLInputElement}[]} */
+      let setLedContainers = [];
+
+      onConnectionChange((device, isConnected) => {
+        ledsContainer.innerHTML = ledEmpty;
+        setLedContainers = [];
+        if (!isConnected) return;
+        ledsContainer.innerHTML = "";
+
+        device.leds.forEach((led, index) => {
+          const el = document.createElement("div");
+          el.className = "led";
+          el.innerHTML = `<span class="name">LED ${index}</span>${ledControls[led.type]}`;
+          const range = el.querySelector(`input[type="range"]`);
+          const color = el.querySelector(`input[type="color"]`);
+          const checkbox = el.querySelector(`input[type="checkbox"]`);
+
+          const throttled = (fn) => BW.ThrottleUtils.throttle(fn, setLedInterval, true);
+          range?.addEventListener(
+            "input",
+            throttled(() => range.isChanging && device.setLed({ index, brightness: +range.value })),
+          );
+          color?.addEventListener(
+            "input",
+            throttled(() => color.isChanging && device.setLed({ index, color: color.value })),
+          );
+          checkbox?.addEventListener(
+            "input",
+            throttled(() => checkbox.isChanging && device.setLed({ index, brightness: checkbox.checked ? 255 : 0 })),
+          );
+          if (color?.disabled) color.value = BW.rgbToHex(led.maxColor);
+
+          [range, color, checkbox].forEach((input) => {
+            if (!input) return;
+            input.addEventListener("focusin", () => (input.isChanging = true));
+            input.addEventListener("focusout", () => (input.isChanging = false));
+            input.addEventListener("mousedown", () => (input.isChanging = true));
+            if (input.type != "color") input.addEventListener("change", () => (input.isChanging = false));
+          });
+
+          setLedContainers[index] = { range, colorInput: color, checkbox };
+          ledsContainer.appendChild(el);
+        });
+
+        device.addEventListener(
+          "setLed",
+          (event) => {
+            const { ledIndex, led } = event.message;
+            updateLed(ledIndex, BW.rgbToHex(led.color));
+            const { range, checkbox, colorInput: color } = setLedContainers[ledIndex] ?? {};
+            if (color && !color.disabled && !color.isChanging) color.value = BW.rgbToHex(led.color);
+            if (checkbox && !checkbox.isChanging) checkbox.checked = BW.projectColor(led.color, led.maxColor) > 0;
+            if (range && !range.isChanging) range.value = BW.projectColor(led.color, led.maxColor) * 255;
+          },
+          device.connectionAbortSignalObject,
+        );
+      });
+
+      // HAPTICS
+      /** @type {BW.VibrationWaveformSegment[]} */
+      const vibrationSegments = [];
+      const segmentsContainer = $("#vibrationSegments");
+      const waveEl = $("#wave");
+      const addSegmentButton = $("#addVibrationSegment");
+      const triggerButton = $("#triggerVibration");
+      const presetSelect = $("#vibrationSequenceSelect");
+
+      const updateTriggerButton = () => {
+        triggerButton.disabled = !getPMSGDevice() || !vibrationSegments.length;
+      };
+      const markCustom = () => (presetSelect.value = "custom");
+
+      const renderWave = () => {
+        waveEl.innerHTML = vibrationSegments.length
+          ? vibrationSegments
+              .map((s) => `<i style="flex:${Math.max(s.duration, 10)};height:${Math.max(s.amplitude * 100, 4)}%"></i>`)
+              .join("")
+          : `<p class="empty">Add a segment or pick a preset.</p>`;
+        updateTriggerButton();
       };
 
-      setupToggle(
-        "orientation",
-        $("toggleOrientation"),
-        () => setTargetRotation(),
-        ({ orientation }) => {
-          if (!orientationRows)
-            orientationRows = buildRows(
-              orientationEl,
-              ["Pitch", "Heading", "Roll"],
-              "°",
-            );
-          setRow(orientationRows[0], orientation.pitch, 180, "°");
-          setRow(orientationRows[1], orientation.heading, 180, "°");
-          setRow(orientationRows[2], orientation.roll, 180, "°");
-          setTargetRotation(orientation);
-        },
-      );
+      const renderSegments = () => {
+        addSegmentButton.disabled = vibrationSegments.length >= BW.MaxNumberOfVibrationWaveformSegments;
+        segmentsContainer.innerHTML = "";
+        vibrationSegments.forEach((segment, i) => {
+          const row = document.createElement("div");
+          row.className = "vseg";
+          row.innerHTML = `
+            <span class="idx">${i + 1}</span>
+            <label>Amplitude
+              <output>${segment.amplitude}</output>
+              <input class="amplitude" type="range" min="0" max="1" step="0.1" value="${segment.amplitude}" />
+            </label>
+            <label>Duration
+              <span class="unit"><input class="duration" type="number" min="10" max="${BW.MaxVibrationWaveformSegmentDuration}" step="10" value="${segment.duration}" /><em>ms</em></span>
+            </label>
+            <button class="icon" aria-label="Delete segment ${i + 1}">×</button>`;
+          const output = $("output", row);
+          $(".amplitude", row).addEventListener("input", (event) => {
+            segment.amplitude = +event.target.value;
+            output.textContent = segment.amplitude;
+            markCustom();
+            renderWave();
+          });
+          $(".duration", row).addEventListener("input", (event) => {
+            segment.duration = +event.target.value;
+            markCustom();
+            renderWave();
+          });
+          $(".icon", row).addEventListener("click", () => {
+            vibrationSegments.splice(vibrationSegments.indexOf(segment), 1);
+            markCustom();
+            renderSegments();
+          });
+          segmentsContainer.appendChild(row);
+        });
+        renderWave();
+      };
 
-      setupToggle(
-        "acceleration",
-        $("toggleAcceleration"),
-        () => setTargetPosition(),
-        ({ acceleration }) => {
-          if (!accelerationRows)
-            accelerationRows = buildRows(accelerationEl, ["X", "Y", "Z"], "");
-          setRow(accelerationRows[0], acceleration.x, 20, "");
-          setRow(accelerationRows[1], acceleration.y, 20, "");
-          setRow(accelerationRows[2], acceleration.z, 20, "");
-          setTargetPosition(acceleration);
-        },
-      );
+      addSegmentButton.addEventListener("click", () => {
+        vibrationSegments.push({ amplitude: 0.5, duration: 500 });
+        markCustom();
+        renderSegments();
+      });
 
-      let taps = 0;
-      setupToggle(
-        "tapDetector",
-        $("toggleTapDetector"),
-        () => {},
-        ({ timestamp }) => {
-          taps++;
-          $("tapCount").textContent = taps;
-          $("tapMeta").textContent =
-            `Last tap at ${new Date().toLocaleTimeString()} (device time ${timestamp})`;
-          const pulse = $("pulse");
-          pulse.classList.remove("go");
-          void pulse.offsetWidth;
-          pulse.classList.add("go");
-        },
-      );
+      triggerButton.addEventListener("click", () => {
+        getPMSGDevice()?.triggerVibration({ type: "waveform", segments: vibrationSegments });
+      });
+      onConnectionChange(updateTriggerButton);
+
+      presetSelect.addEventListener("input", () => {
+        const value = presetSelect.value;
+        if (value == "custom") return;
+        vibrationSegments.length = 0;
+        value.split(",").forEach((amplitudeOrDuration, index) => {
+          if (index % 2) vibrationSegments.at(-1).duration = +amplitudeOrDuration;
+          else vibrationSegments.push({ amplitude: +amplitudeOrDuration, duration: 0 });
+        });
+        renderSegments();
+      });
+
+      renderSegments();
     </script>
   </body>
 </html>

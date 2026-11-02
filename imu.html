@@ -48,26 +48,186 @@
     <button id="addDevice">add device</button>
 
     <br /><br />
-    <button id="toggleOrientation" disabled>enable orientation</button>
+    <label>
+      orientation
+      <select id="orientationSelect" disabled>
+        <optgroup label="select orientation type">
+          <option value="none">no orientation</option>
+          <option value="gameRotation">game rotation</option>
+          <option value="orientation">orientation</option>
+          <option value="gyroscope">gyroscope</option>
+        </optgroup>
+      </select>
+    </label>
     <br />
+    <label>
+      gameRotation data:
+      <pre id="gameRotationData"></pre>
+    </label>
     <label>
       orientation data:
       <pre id="orientationData"></pre>
     </label>
+    <label>
+      gyroscope data:
+      <pre id="gyroscopeData"></pre>
+    </label>
     <br />
-    <button id="toggleAcceleration" disabled>enable acceleration</button>
+
+    <label>
+      position
+      <select id="positionSelect" disabled>
+        <optgroup label="select position type">
+          <option value="none">no position</option>
+          <option>linearAcceleration</option>
+          <option>acceleration</option>
+          <option>gravity</option>
+        </optgroup>
+      </select>
+    </label>
     <br />
+    <label>
+      linear acceleration data:
+      <pre id="linearAccelerationData"></pre>
+    </label>
     <label>
       acceleration data:
       <pre id="accelerationData"></pre>
     </label>
+    <label>
+      gravity data:
+      <pre id="gravityData"></pre>
+    </label>
     <br />
+
     <button id="toggleTapDetector" disabled>enable tap detector</button>
     <br />
     <label>
-      tap data:
+      tap detector data:
       <pre id="tapDetectorData"></pre>
     </label>
+    <br />
+
+    <button id="toggleDeviceOrientation" disabled>
+      enable device orientation
+    </button>
+    <br />
+    <label>
+      device orientation data:
+      <pre id="deviceOrientationData"></pre>
+    </label>
+    <br />
+
+    <button id="toggleStepDetector" disabled>enable step detector</button>
+    <br />
+    <label>
+      step detector data:
+      <pre id="stepDetectorData"></pre>
+    </label>
+    <br />
+
+    <button id="toggleStepCounter" disabled>enable step counter</button>
+    <br />
+    <label>
+      step counter data:
+      <pre id="stepCounterData"></pre>
+    </label>
+    <br />
+
+    <button id="toggleActivity" disabled>enable activity recognition</button>
+    <br />
+    <label>
+      activity recognition data:
+      <pre id="activityData"></pre>
+    </label>
+    <br />
+
+    <button id="toggleLight" disabled>enable light sensor</button>
+    <br />
+    <label>
+      light sensor data:
+      <pre id="lightData"></pre>
+    </label>
+    <br />
+
+    <div id="leds">
+      <h3>Leds</h3>
+      <template id="analogSingleLedTemplate">
+        <div class="setLed">
+          <input type="color" disabled />
+          <input type="range" min="0" max="255" step="1" value="0" />
+        </div>
+      </template>
+      <template id="digitalSingleLedTemplate">
+        <div class="setLed">
+          <input type="color" disabled />
+          <input type="checkbox" />
+        </div>
+      </template>
+      <template id="digitalRGBLedTemplate">
+        <div class="setLed">
+          <input type="color" disabled />
+          <label>r<input type="checkbox" class="r" /> </label>
+          <label>g<input type="checkbox" class="g" /> </label>
+          <label>b<input type="checkbox" class="b" /> </label>
+        </div>
+      </template>
+      <template id="analogRGBLedTemplate">
+        <div class="setLed">
+          <input type="color" />
+        </div>
+      </template>
+    </div>
+
+    <br />
+
+    <div id="Vibration">
+      <h3>Vibration</h3>
+
+      <label>
+        select vibration sequence
+        <select id="vibrationSequenceSelect">
+          <optgroup label="select vibration sequence">
+            <option selected>custom</option>
+            <option value="1,1000">long buzz</option>
+            <option value="1,80,0,80,1,80">double click</option>
+          </optgroup>
+        </select>
+      </label>
+
+      <button id="triggerVibration" disabled>vibrate</button>
+
+      <button id="addVibrationSegment">add segment</button>
+      <div id="vibrationSegments">
+        <template id="vibrationSegmentTemplate">
+          <div class="vibrationSegment">
+            <label>
+              amplitude
+              <input
+                class="amplitude"
+                type="number"
+                min="0"
+                max="1"
+                value="0.5"
+                step="0.1"
+              />
+            </label>
+            <label>
+              duration (ms)
+              <input
+                class="duration"
+                type="number"
+                min="10"
+                value="100"
+                step="10"
+              />
+            </label>
+            <button class="delete">delete segment</button>
+          </div>
+        </template>
+      </div>
+    </div>
+
     <br />
 
     <a-scene

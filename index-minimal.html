@@ -324,7 +324,7 @@
           () => {
             updateTakePictureButton();
           },
-          device.connectionAbortOptions,
+          device.connectionAbortSignalObject,
         );
       }
     });
@@ -347,7 +347,7 @@
         () => {
           autoPictureCheckbox.checked = device.autoPicture;
         },
-        device.connectionAbortOptions,
+        device.connectionAbortSignalObject,
       );
     });
 
@@ -363,7 +363,7 @@
             cameraImageProgress.value = event.message.progress;
           }
         },
-        device.connectionAbortOptions,
+        device.connectionAbortSignalObject,
       );
     });
 
@@ -467,7 +467,7 @@
           cameraQualitySpan.innerText = `${qualityFactor}%`;
           cameraQualityInput.value = qualityFactor;
         },
-        device.connectionAbortOptions,
+        device.connectionAbortSignalObject,
       );
     }, true);
 
@@ -506,7 +506,7 @@
           () => {
             updateToggleMicrophoneButton();
           },
-          device.connectionAbortOptions,
+          device.connectionAbortSignalObject,
         );
       }
     });
@@ -541,7 +541,7 @@
             setMicrophoneSampleRateSelect.disabled =
               device.microphoneStatus != "idle";
           },
-          { ...device.connectionAbortOptions, immediate: true },
+          { ...device.connectionAbortSignalObject, immediate: true },
         );
       }
     });
@@ -577,7 +577,7 @@
             setMicrophoneBitDepthSelect.disabled =
               device.microphoneStatus != "idle";
           },
-          { ...device.connectionAbortOptions, immediate: true },
+          { ...device.connectionAbortSignalObject, immediate: true },
         );
       }
     });
@@ -681,14 +681,14 @@
           () => {
             updateToggleRecordingButtons();
           },
-          device.connectionAbortOptions,
+          device.connectionAbortSignalObject,
         );
         device.addEventListener(
           "isRecordingMicrophone",
           () => {
             updateToggleRecordingButtons();
           },
-          device.connectionAbortOptions,
+          device.connectionAbortSignalObject,
         );
       }
     });
@@ -811,7 +811,7 @@
           }
           cameraRecordingVideoElement.src = event.message.url;
         },
-        device.connectionAbortOptions,
+        device.connectionAbortSignalObject,
       );
       device.addEventListener(
         "microphoneStatus",
@@ -820,7 +820,7 @@
             selectMicrophone("device");
           }
         },
-        device.connectionAbortOptions,
+        device.connectionAbortSignalObject,
       );
     }, true);
     onAVDeviceIsConnected((device, isConnected) => {
@@ -840,7 +840,7 @@
           }
           microphoneRecordingAudioElement.src = event.message.url;
         },
-        device.connectionAbortOptions,
+        device.connectionAbortSignalObject,
       );
     });
   </script>
